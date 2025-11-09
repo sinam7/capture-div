@@ -71,12 +71,14 @@ class ElementCapturer {
    * [NEW] Hides all fixed/sticky positioned elements on the page
    * Prevents them from appearing in screenshots or duplicating during stitching
    * Uses multiple methods to ensure elements are completely hidden
+   * Only hides elements that are actually "floating" (stuck to viewport edges)
    * @returns {Array} Array of {element, originalDisplay, originalVisibility, originalPosition}
    */
   static hideAllFixedStickyElements() {
     console.log('[ElementCapturer] Hiding ALL fixed/sticky positioned elements');
     const hiddenElements = [];
     const allElements = document.querySelectorAll('*');
+    const viewportHeight = window.innerHeight;
 
     allElements.forEach((el) => {
       // Skip our own UI elements
@@ -87,18 +89,66 @@ class ElementCapturer {
       const computedStyle = window.getComputedStyle(el);
       const position = computedStyle.position;
 
+      // Check if element is fixed or sticky positioned
       if (position === 'fixed' || position === 'sticky') {
-        hiddenElements.push({
-          element: el,
-          originalDisplay: el.style.display,
-          originalVisibility: el.style.visibility,
-          originalPosition: el.style.position,
-        });
+        // For 'fixed' elements, always hide (they're always floating)
+        if (position === 'fixed') {
+          hiddenElements.push({
+            element: el,
+            originalDisplay: el.style.display,
+            originalVisibility: el.style.visibility,
+            originalPosition: el.style.position,
+          });
 
-        // Multiple hiding methods for maximum effectiveness
-        el.style.display = 'none';
-        el.style.visibility = 'hidden';
-        el.style.position = 'static';
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.position = 'static';
+          return;
+        }
+
+        // For 'sticky' elements, only hide if they're actually stuck to viewport
+        if (position === 'sticky') {
+          const rect = el.getBoundingClientRect();
+          const top = computedStyle.top;
+          const bottom = computedStyle.bottom;
+
+          // Check if element is stuck to top of viewport
+          const isStuckToTop = top !== 'auto' && rect.top <= 100; // Within 100px of top
+
+          // Check if element is stuck to bottom of viewport
+          const isStuckToBottom = bottom !== 'auto' && rect.bottom >= (viewportHeight - 100); // Within 100px of bottom
+
+          // Only hide if actually stuck to viewport edges
+          if (isStuckToTop || isStuckToBottom) {
+            hiddenElements.push({
+              element: el,
+              originalDisplay: el.style.display,
+              originalVisibility: el.style.visibility,
+              originalPosition: el.style.position,
+            });
+
+            el.style.display = 'none';
+            el.style.visibility = 'hidden';
+            el.style.position = 'static';
+
+            console.log('[ElementCapturer] Hidden stuck sticky element:', {
+              tag: el.tagName,
+              class: el.className,
+              top: rect.top,
+              bottom: rect.bottom,
+              isStuckToTop,
+              isStuckToBottom
+            });
+          } else {
+            console.log('[ElementCapturer] Skipping non-stuck sticky element:', {
+              tag: el.tagName,
+              class: el.className,
+              top: rect.top,
+              bottom: rect.bottom,
+              reason: 'Not stuck to viewport edges'
+            });
+          }
+        }
       }
     });
 
