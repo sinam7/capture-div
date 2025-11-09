@@ -15,6 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Check if URL is restricted (content scripts can't run on these pages)
+      const restrictedProtocols = ['chrome:', 'chrome-extension:', 'edge:', 'about:', 'data:'];
+      const isRestricted = restrictedProtocols.some((protocol) => tab.url?.startsWith(protocol));
+
+      if (isRestricted) {
+        showStatus(
+          'Cannot capture on this page. Try a regular website instead.',
+          'error'
+        );
+        return;
+      }
+
       // Send message to content script to start selection
       await chrome.tabs.sendMessage(tab.id, { action: 'startSelection' });
 
@@ -26,8 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
         window.close();
       }, 500);
     } catch (error) {
-      console.error('Failed to start selection:', error);
-      showStatus('Failed to start selection. Please refresh the page.', 'error');
+      // Log error for debugging but with more context
+      console.error('[Popup] Failed to start selection:', error.message);
+
+      // Show user-friendly error message
+      if (error.message?.includes('Receiving end does not exist')) {
+        showStatus(
+          'Content script not loaded. Please refresh the page and try again.',
+          'error'
+        );
+      } else {
+        showStatus(`Failed to start selection: ${error.message}`, 'error');
+      }
     }
   });
 

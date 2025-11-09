@@ -163,7 +163,16 @@ class DOMTraversal {
       if (current.id) {
         selector += `#${current.id}`;
       } else if (current.className) {
-        const firstClass = current.className.split(' ')[0];
+        // Handle both HTML and SVG elements (SVG has className as SVGAnimatedString)
+        let firstClass = '';
+        if (typeof current.className === 'string') {
+          // HTML element
+          firstClass = current.className.split(' ')[0];
+        } else if (current.className.baseVal) {
+          // SVG element
+          firstClass = current.className.baseVal.split(' ')[0];
+        }
+
         if (firstClass) {
           selector += `.${firstClass}`;
         }

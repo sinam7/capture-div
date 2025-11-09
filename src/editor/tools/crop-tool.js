@@ -11,11 +11,16 @@ class CropTool extends BaseTool {
   }
 
   onDrawStart(x, y) {
+    console.log('[CropTool] Draw start at', x, y);
     // Save the current canvas state
     this.savedImageData = this.canvasManager.getImageData();
   }
 
   onDrawMove(x, y) {
+    // Clamp coordinates to canvas bounds (prevent crop selection outside canvas)
+    x = Math.max(0, Math.min(x, this.canvas.width));
+    y = Math.max(0, Math.min(y, this.canvas.height));
+
     // Calculate crop rectangle
     const width = x - this.startX;
     const height = y - this.startY;
@@ -32,9 +37,27 @@ class CropTool extends BaseTool {
   }
 
   onDrawEnd(x, y) {
+    console.log('[CropTool] Draw end at', x, y);
+
+    // Clamp coordinates to canvas bounds
+    x = Math.max(0, Math.min(x, this.canvas.width));
+    y = Math.max(0, Math.min(y, this.canvas.height));
+
+    // Recalculate crop rectangle with clamped coordinates
+    const width = x - this.startX;
+    const height = y - this.startY;
+
+    this.cropRect = {
+      x: Math.min(this.startX, x),
+      y: Math.min(this.startY, y),
+      width: Math.abs(width),
+      height: Math.abs(height),
+    };
+
     if (!this.cropRect || this.cropRect.width < 10 || this.cropRect.height < 10) {
       // Selection too small, cancel
       this.canvasManager.putImageData(this.savedImageData);
+      console.log('[CropTool] Selection too small, cancelled');
       return;
     }
 
@@ -43,6 +66,7 @@ class CropTool extends BaseTool {
 
     // Save to history
     this.historyManager.saveState();
+    console.log('[CropTool] Crop applied and saved to history');
   }
 
   onDrawCancel() {

@@ -1,6 +1,5 @@
 /**
  * Blur Tool - Applies blur effect to selected areas
- * (To be implemented in Sprint 3)
  */
 
 class BlurTool extends BaseTool {
@@ -11,10 +10,15 @@ class BlurTool extends BaseTool {
   }
 
   onDrawStart(x, y) {
+    console.log('[BlurTool] Draw start at', x, y);
     this.savedImageData = this.canvasManager.getImageData();
   }
 
   onDrawMove(x, y) {
+    // Clamp coordinates to canvas bounds
+    x = Math.max(0, Math.min(x, this.canvas.width));
+    y = Math.max(0, Math.min(y, this.canvas.height));
+
     // Preview blur area (simplified for now)
     this.canvasManager.putImageData(this.savedImageData);
 
@@ -37,7 +41,13 @@ class BlurTool extends BaseTool {
   }
 
   onDrawEnd(x, y) {
-    // Apply blur effect (to be fully implemented in Sprint 3)
+    console.log('[BlurTool] Draw end at', x, y);
+
+    // Clamp coordinates to canvas bounds
+    x = Math.max(0, Math.min(x, this.canvas.width));
+    y = Math.max(0, Math.min(y, this.canvas.height));
+
+    // Calculate blur rectangle
     const width = x - this.startX;
     const height = y - this.startY;
 
@@ -47,27 +57,39 @@ class BlurTool extends BaseTool {
     const rectHeight = Math.abs(height);
 
     if (rectWidth > 5 && rectHeight > 5) {
-      this.applySimpleBlur(rectX, rectY, rectWidth, rectHeight);
-      this.historyManager.saveState();
-    } else {
+      // IMPORTANT: Restore clean image first (removes selection rectangle)
       this.canvasManager.putImageData(this.savedImageData);
+
+      // Then apply blur effect
+      this.applySimpleBlur(rectX, rectY, rectWidth, rectHeight);
+
+      // Save to history
+      this.historyManager.saveState();
+      console.log('[BlurTool] Blur applied and saved to history');
+    } else {
+      // Selection too small, restore original
+      this.canvasManager.putImageData(this.savedImageData);
+      console.log('[BlurTool] Selection too small, cancelled');
     }
 
     this.savedImageData = null;
   }
 
   onDrawCancel() {
+    console.log('[BlurTool] Draw cancelled');
     if (this.savedImageData) {
       this.canvasManager.putImageData(this.savedImageData);
     }
   }
 
   applySimpleBlur(x, y, width, height) {
+    console.log('[BlurTool] Applying blur to rect:', { x, y, width, height, radius: this.blurRadius });
+
     // Simple blur implementation using canvas filter (Chrome/Edge support)
     const ctx = this.canvas.getContext('2d');
     const imageData = ctx.getImageData(x, y, width, height);
 
-    // Apply blur using canvas (temporary simple implementation)
+    // Apply blur using canvas filter
     ctx.save();
     ctx.filter = `blur(${this.blurRadius}px)`;
 

@@ -11,11 +11,16 @@ class MosaicTool extends BaseTool {
   }
 
   onDrawStart(x, y) {
+    console.log('[MosaicTool] Draw start at', x, y);
     this.savedImageData = this.canvasManager.getImageData();
   }
 
   onDrawMove(x, y) {
-    // Preview mosaic area
+    // Clamp coordinates to canvas bounds
+    x = Math.max(0, Math.min(x, this.canvas.width));
+    y = Math.max(0, Math.min(y, this.canvas.height));
+
+    // Preview mosaic area (simplified for now)
     this.canvasManager.putImageData(this.savedImageData);
 
     const settings = this.getSettings();
@@ -37,7 +42,13 @@ class MosaicTool extends BaseTool {
   }
 
   onDrawEnd(x, y) {
-    // Apply mosaic effect
+    console.log('[MosaicTool] Draw end at', x, y);
+
+    // Clamp coordinates to canvas bounds
+    x = Math.max(0, Math.min(x, this.canvas.width));
+    y = Math.max(0, Math.min(y, this.canvas.height));
+
+    // Calculate mosaic rectangle
     const width = x - this.startX;
     const height = y - this.startY;
 
@@ -47,16 +58,26 @@ class MosaicTool extends BaseTool {
     const rectHeight = Math.abs(height);
 
     if (rectWidth > 5 && rectHeight > 5) {
-      this.applyMosaic(rectX, rectY, rectWidth, rectHeight);
-      this.historyManager.saveState();
-    } else {
+      // IMPORTANT: Restore clean image first (removes selection rectangle)
       this.canvasManager.putImageData(this.savedImageData);
+
+      // Then apply mosaic effect
+      this.applyMosaic(rectX, rectY, rectWidth, rectHeight);
+
+      // Save to history
+      this.historyManager.saveState();
+      console.log('[MosaicTool] Mosaic applied and saved to history');
+    } else {
+      // Selection too small, restore original
+      this.canvasManager.putImageData(this.savedImageData);
+      console.log('[MosaicTool] Selection too small, cancelled');
     }
 
     this.savedImageData = null;
   }
 
   onDrawCancel() {
+    console.log('[MosaicTool] Draw cancelled');
     if (this.savedImageData) {
       this.canvasManager.putImageData(this.savedImageData);
     }

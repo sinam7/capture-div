@@ -42,7 +42,6 @@ class BaseTool {
     this.canvas.addEventListener('mousedown', this.handleMouseDown);
     this.canvas.addEventListener('mousemove', this.handleMouseMove);
     this.canvas.addEventListener('mouseup', this.handleMouseUp);
-    this.canvas.addEventListener('mouseleave', this.handleMouseLeave);
   }
 
   /**
@@ -52,7 +51,23 @@ class BaseTool {
     this.canvas.removeEventListener('mousedown', this.handleMouseDown);
     this.canvas.removeEventListener('mousemove', this.handleMouseMove);
     this.canvas.removeEventListener('mouseup', this.handleMouseUp);
-    this.canvas.removeEventListener('mouseleave', this.handleMouseLeave);
+    this.removeDocumentListeners();
+  }
+
+  /**
+   * Attaches document-level listeners for drawing outside canvas
+   */
+  attachDocumentListeners() {
+    document.addEventListener('mousemove', this.handleDocumentMouseMove);
+    document.addEventListener('mouseup', this.handleDocumentMouseUp);
+  }
+
+  /**
+   * Removes document-level listeners
+   */
+  removeDocumentListeners() {
+    document.removeEventListener('mousemove', this.handleDocumentMouseMove);
+    document.removeEventListener('mouseup', this.handleDocumentMouseUp);
   }
 
   /**
@@ -67,11 +82,14 @@ class BaseTool {
     this.currentY = this.startY;
     this.isDrawing = true;
 
+    // Attach document listeners to track mouse outside canvas
+    this.attachDocumentListeners();
+
     this.onDrawStart(this.startX, this.startY);
   };
 
   /**
-   * Handles mouse move event
+   * Handles mouse move event (on canvas)
    * Override this in subclasses
    */
   handleMouseMove = (e) => {
@@ -85,7 +103,23 @@ class BaseTool {
   };
 
   /**
-   * Handles mouse up event
+   * Handles mouse move event on document (when mouse leaves canvas)
+   */
+  handleDocumentMouseMove = (e) => {
+    if (!this.isDrawing) return;
+
+    const rect = this.canvas.getBoundingClientRect();
+    // Calculate position relative to canvas
+    this.currentX = e.clientX - rect.left;
+    this.currentY = e.clientY - rect.top;
+
+    // Note: coordinates may be outside canvas bounds
+    // Individual tools can clamp them in onDrawMove if needed
+    this.onDrawMove(this.currentX, this.currentY);
+  };
+
+  /**
+   * Handles mouse up event (on canvas)
    * Override this in subclasses
    */
   handleMouseUp = (e) => {
@@ -96,17 +130,27 @@ class BaseTool {
     this.currentY = e.clientY - rect.top;
     this.isDrawing = false;
 
+    // Remove document listeners
+    this.removeDocumentListeners();
+
     this.onDrawEnd(this.currentX, this.currentY);
   };
 
   /**
-   * Handles mouse leave event
+   * Handles mouse up event on document (when mouse released outside canvas)
    */
-  handleMouseLeave = () => {
-    if (this.isDrawing) {
-      this.isDrawing = false;
-      this.onDrawCancel();
-    }
+  handleDocumentMouseUp = (e) => {
+    if (!this.isDrawing) return;
+
+    const rect = this.canvas.getBoundingClientRect();
+    this.currentX = e.clientX - rect.left;
+    this.currentY = e.clientY - rect.top;
+    this.isDrawing = false;
+
+    // Remove document listeners
+    this.removeDocumentListeners();
+
+    this.onDrawEnd(this.currentX, this.currentY);
   };
 
   /**

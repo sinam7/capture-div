@@ -5,7 +5,8 @@
 class CanvasManager {
   constructor(canvas) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+    // Use willReadFrequently for better performance with getImageData
+    this.ctx = canvas.getContext('2d', { willReadFrequently: true });
     this.originalImage = null;
     this.currentImage = null;
     this.devicePixelRatio = window.devicePixelRatio || 1;

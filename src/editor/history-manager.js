@@ -14,12 +14,22 @@ class HistoryManager {
    * Saves the current canvas state
    */
   saveState() {
+    console.log('[HistoryManager] Saving state');
+
     // Remove any states after current index (when user did undo and then made a new change)
     this.states = this.states.slice(0, this.currentIndex + 1);
 
-    // Save current canvas state
+    // Save current canvas state WITH dimensions (important for crop undo)
     const imageData = this.canvasManager.getImageData();
-    this.states.push(imageData);
+    const dimensions = this.canvasManager.getDimensions();
+
+    this.states.push({
+      imageData: imageData,
+      width: dimensions.width,
+      height: dimensions.height,
+    });
+
+    console.log('[HistoryManager] State saved with dimensions:', dimensions);
 
     // Limit the number of stored states
     if (this.states.length > this.maxStates) {
@@ -78,8 +88,26 @@ class HistoryManager {
    */
   restoreState() {
     if (this.currentIndex >= 0 && this.currentIndex < this.states.length) {
-      const imageData = this.states[this.currentIndex];
-      this.canvasManager.putImageData(imageData);
+      const state = this.states[this.currentIndex];
+
+      console.log('[HistoryManager] Restoring state with dimensions:', {
+        width: state.width,
+        height: state.height,
+      });
+
+      // Restore canvas dimensions first (important for crop undo)
+      const canvas = this.canvasManager.canvas;
+      if (canvas.width !== state.width || canvas.height !== state.height) {
+        canvas.width = state.width;
+        canvas.height = state.height;
+        canvas.style.width = `${state.width}px`;
+        canvas.style.height = `${state.height}px`;
+        console.log('[HistoryManager] Canvas dimensions restored');
+      }
+
+      // Then restore image data
+      this.canvasManager.putImageData(state.imageData);
+      console.log('[HistoryManager] State restored successfully');
     }
   }
 

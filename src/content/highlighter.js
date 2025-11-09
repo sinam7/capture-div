@@ -55,7 +55,21 @@ class ElementHighlighter {
     const rect = element.getBoundingClientRect();
     const tagName = element.tagName.toLowerCase();
     const elementId = element.id ? `#${element.id}` : '';
-    const elementClass = element.className ? `.${element.className.split(' ')[0]}` : '';
+
+    // Handle both HTML and SVG elements (SVG has className as SVGAnimatedString)
+    let elementClass = '';
+    if (element.className) {
+      if (typeof element.className === 'string') {
+        // HTML element
+        const firstClass = element.className.split(' ')[0];
+        elementClass = firstClass ? `.${firstClass}` : '';
+      } else if (element.className.baseVal) {
+        // SVG element
+        const firstClass = element.className.baseVal.split(' ')[0];
+        elementClass = firstClass ? `.${firstClass}` : '';
+      }
+    }
+
     const dimensions = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
 
     const tooltipText = `${tagName}${elementId}${elementClass} (${dimensions})`;
