@@ -5,8 +5,8 @@
 
 class ElementCapturer {
   /**
-   * Captures a screenshot of the specified element
-   * This is the main entry point - handles all capture scenarios
+   * [NEW] Captures a screenshot of the specified element
+   * This is the main entry point - always uses native API
    * @param {HTMLElement} element - The element to capture
    * @returns {Promise<string>} Data URL of the captured image
    */
@@ -27,18 +27,14 @@ class ElementCapturer {
       // Step 3: Wait for DOM to settle after hiding overlays
       await this.waitForDOMUpdate();
 
-      // Step 4: Try html2canvas first (best for elements outside viewport)
-      // Disabled due to CSP conflicts with external CSS loading causing timeouts
-      if (false) {
-        console.log('[ElementCapturer] Using html2canvas method');
-        return await this.captureWithHtml2Canvas(element);
-      }
-
-      // Step 5: Fall back to Chrome native API
+      // Step 4: Always use the native API (html2canvas removed due to CSP conflicts)
       console.log('[ElementCapturer] Using Chrome native capture method');
       return await this.captureWithNativeAPI(element);
+
     } catch (error) {
       console.error('[ElementCapturer] Capture failed:', error);
+      // Ensure overlays are restored on failure
+      await this.restoreOverlays();
       throw error;
     }
   }
@@ -72,49 +68,30 @@ class ElementCapturer {
   }
 
   /**
-   * Hides all fixed/sticky positioned elements (floating UI) except those inside target
-   * Returns array of hidden elements for later restoration
-   * @param {HTMLElement} targetElement - The element being captured (to exclude its descendants)
-   * @returns {Array} Array of {element, originalPosition, originalDisplay}
+   * [NEW] Hides all fixed/sticky positioned elements on the page
+   * Prevents them from appearing in screenshots or duplicating during stitching
+   * @returns {Array} Array of {element, originalDisplay}
    */
-  static hideFixedElements(targetElement) {
-    console.log('[ElementCapturer] Hiding fixed/sticky positioned elements');
-
+  static hideAllFixedStickyElements() {
+    console.log('[ElementCapturer] Hiding ALL fixed/sticky positioned elements');
     const hiddenElements = [];
     const allElements = document.querySelectorAll('*');
 
-    allElements.forEach((element) => {
-      const computedStyle = window.getComputedStyle(element);
+    allElements.forEach((el) => {
+      // Skip our own UI elements
+      if (el.className && typeof el.className === 'string' && el.className.startsWith('element-selector__')) {
+        return;
+      }
+
+      const computedStyle = window.getComputedStyle(el);
       const position = computedStyle.position;
 
-      // Check if element is fixed or sticky positioned
       if (position === 'fixed' || position === 'sticky') {
-        // IMPORTANT: Skip if it's part of the target element we're capturing
-        // We only want to hide floating UI elements, not fixed content inside the target
-        if (targetElement && targetElement.contains(element)) {
-          console.log('[ElementCapturer] Skipping fixed/sticky element inside target:', {
-            tag: element.tagName,
-            class: element.className,
-          });
-          return; // Skip this element
-        }
-
-        // Store original values
         hiddenElements.push({
-          element: element,
-          originalPosition: element.style.position,
-          originalDisplay: element.style.display,
-          computedPosition: position,
+          element: el,
+          originalDisplay: el.style.display,
         });
-
-        // Hide the element
-        element.style.display = 'none';
-
-        console.log('[ElementCapturer] Hidden fixed/sticky element:', {
-          tag: element.tagName,
-          class: element.className,
-          position: position,
-        });
+        el.style.display = 'none';
       }
     });
 
@@ -123,78 +100,60 @@ class ElementCapturer {
   }
 
   /**
-   * Hides fixed/sticky positioned elements INSIDE target element
-   * Called after first capture to prevent duplication in subsequent captures
-   * @param {HTMLElement} targetElement - The element being captured
-   * @returns {Object} {elements: Array, totalHeight: number}
+   * [NEW] Restores previously hidden fixed/sticky elements
+   * @param {Array} hiddenElements - Array from hideAllFixedStickyElements()
    */
-  static hideFixedElementsInsideTarget(targetElement) {
-    console.log('[ElementCapturer] Hiding fixed/sticky elements inside target');
-
-    const hiddenElements = [];
-    let totalHeight = 0;
-    const allElements = targetElement.querySelectorAll('*');
-
-    allElements.forEach((element) => {
-      const computedStyle = window.getComputedStyle(element);
-      const position = computedStyle.position;
-
-      // Check if element is fixed or sticky positioned
-      if (position === 'fixed' || position === 'sticky') {
-        // Get element height before hiding
-        const rect = element.getBoundingClientRect();
-        const elementHeight = rect.height;
-
-        // Store original values
-        hiddenElements.push({
-          element: element,
-          originalPosition: element.style.position,
-          originalDisplay: element.style.display,
-          computedPosition: position,
-          height: elementHeight,
-        });
-
-        totalHeight += elementHeight;
-
-        // Hide the element
-        element.style.display = 'none';
-
-        console.log('[ElementCapturer] Hidden internal fixed/sticky element:', {
-          tag: element.tagName,
-          class: element.className,
-          position: position,
-          height: elementHeight,
-        });
-      }
+  static restoreFixedStickyElements(hiddenElements) {
+    console.log(`[ElementCapturer] Restoring ${hiddenElements.length} elements`);
+    hiddenElements.forEach(({ element, originalDisplay }) => {
+      element.style.display = originalDisplay || '';
     });
-
-    console.log(`[ElementCapturer] Hidden ${hiddenElements.length} internal fixed/sticky elements, total height: ${totalHeight}px`);
-    return { elements: hiddenElements, totalHeight };
   }
 
   /**
-   * Restores previously hidden fixed/sticky elements
-   * @param {Array} hiddenElements - Array from hideFixedElements()
+   * [NEW] Calculates the real content height ignoring CSS min-height
+   * @param {HTMLElement} element - The element to measure
+   * @returns {number} The true height of the content
    */
-  static restoreFixedElements(hiddenElements) {
-    console.log(`[ElementCapturer] Restoring ${hiddenElements.length} fixed/sticky elements`);
+  static getRealContentHeight(element) {
+    const rect = element.getBoundingClientRect();
 
-    hiddenElements.forEach(({ element, originalPosition, originalDisplay }) => {
-      // Restore original values
-      if (originalPosition) {
-        element.style.position = originalPosition;
-      } else {
-        element.style.position = '';
-      }
+    // 1. If no children, return own height
+    if (!element.firstElementChild) {
+      return rect.height;
+    }
 
-      if (originalDisplay) {
-        element.style.display = originalDisplay;
-      } else {
-        element.style.display = '';
+    // 2. Find the lowest bottom coordinate among all descendants
+    const allDescendants = element.querySelectorAll('*');
+    let lowestBottom = 0;
+
+    // 3. Include element itself
+    const selfRect = element.getBoundingClientRect();
+    lowestBottom = selfRect.bottom;
+
+    allDescendants.forEach(child => {
+      const childRect = child.getBoundingClientRect();
+      if (childRect.width > 0 || childRect.height > 0) {
+        lowestBottom = Math.max(lowestBottom, childRect.bottom);
       }
     });
 
-    console.log('[ElementCapturer] Fixed/sticky elements restored');
+    // 4. Real height = (lowest bottom - element top)
+    const realHeight = lowestBottom - rect.top;
+
+    console.log('[ElementCapturer] Real content height calculated:', {
+      computedHeight: rect.height, // CSS computed height (fake)
+      scrollHeight: element.scrollHeight, // Scroll height (fake)
+      realHeight: realHeight // Actual content height (real)
+    });
+
+    // 5. Return real height if valid
+    if (realHeight > 0) {
+      return realHeight;
+    }
+
+    // 6. Fallback to scrollHeight if calculation fails
+    return element.scrollHeight;
   }
 
   /**
@@ -260,370 +219,183 @@ class ElementCapturer {
   }
 
   /**
-   * Captures using html2canvas (best method - handles elements outside viewport)
-   * @param {HTMLElement} element - The element to capture
-   * @returns {Promise<string>} Data URL of the captured image
-   */
-  static async captureWithHtml2Canvas(element) {
-    console.log('[ElementCapturer] Capturing with html2canvas');
-
-    if (typeof html2canvas === 'undefined') {
-      throw new Error('html2canvas library not loaded');
-    }
-
-    try {
-      const canvas = await html2canvas(element, {
-        allowTaint: true,
-        useCORS: true,
-        backgroundColor: null,
-        logging: false,
-        // Important: Don't offset by scroll, html2canvas handles this
-        scrollY: 0,
-        scrollX: 0,
-        // Let html2canvas calculate actual content size automatically (without CSS computed height)
-        // Ignore certain elements
-        ignoreElements: (el) => {
-          // Ignore all <script> tags to prevent CSP violations
-          if (el.tagName === 'SCRIPT') {
-            return true;
-          }
-
-          // Ignore our UI overlays
-          return (
-            el.classList.contains('element-selector__highlight') ||
-            el.classList.contains('element-selector__tooltip') ||
-            el.classList.contains('element-selector__slider') ||
-            el.classList.contains('element-selector__instructions') ||
-            el.classList.contains('element-selector__notification')
-          );
-        },
-      });
-
-      const dataUrl = canvas.toDataURL('image/png');
-      console.log('[ElementCapturer] html2canvas capture successful, size:', dataUrl.length);
-      return dataUrl;
-    } catch (error) {
-      console.error('[ElementCapturer] html2canvas failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Captures using Chrome's native tab capture API
-   * Note: For elements larger than viewport, uses multi-scroll stitching
+   * [UPDATED] Captures using Chrome's native tab capture API
+   * Uses getRealContentHeight to avoid CSS computed height issues
    * @param {HTMLElement} element - The element to capture
    * @returns {Promise<string>} Data URL of the captured image
    */
   static async captureWithNativeAPI(element) {
     console.log('[ElementCapturer] Capturing with Chrome native API');
 
+    // [NEW] Calculate real content height first
+    const contentHeight = this.getRealContentHeight(element);
+
+    const initialRect = element.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+
+    console.log('[ElementCapturer] Element dimensions:', {
+      left: initialRect.left,
+      top: initialRect.top,
+      width: initialRect.width,
+      contentHeight: contentHeight,
+      viewportHeight,
+    });
+
+    // [NEW] Use real content height to determine if stitching is needed
+    const needsStitching = contentHeight > viewportHeight;
+
+    // [NEW] Hide all sticky elements before capture
+    const hiddenElements = this.hideAllFixedStickyElements();
+    await this.waitForDOMUpdate();
+
+    let imageDataUrl;
     try {
-      // Scroll to top of element
-      await this.scrollElementIntoFullView(element);
-      await this.waitForDOMUpdate();
-
-      // Get initial element rect
-      const initialRect = element.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      console.log('[ElementCapturer] Element dimensions:', {
-        left: initialRect.left,
-        top: initialRect.top,
-        width: initialRect.width,
-        height: initialRect.height,
-        viewportHeight,
-      });
-
-      // Check if element is taller than viewport
-      // Use scrollHeight instead of getBoundingClientRect().height to avoid CSS computed height issues
-      const needsStitching = element.scrollHeight > viewportHeight * 0.9; // Use 90% to account for edges
-
       if (needsStitching) {
         console.log('[ElementCapturer] Element larger than viewport, using multi-scroll capture');
-        return await this.captureWithStitching(element, initialRect);
+        imageDataUrl = await this.captureWithStitching(element, initialRect, contentHeight, viewportHeight);
+      } else {
+        console.log('[ElementCapturer] Single viewport capture');
+        imageDataUrl = await this.captureSingleViewport(element, initialRect, contentHeight);
       }
-
-      // Single capture for elements that fit in viewport
-      return await this.captureSingleViewport(element, initialRect);
     } catch (error) {
+      // Restore sticky elements on error
+      this.restoreFixedStickyElements(hiddenElements);
       console.error('[ElementCapturer] Native capture failed:', error);
       throw error;
     }
+
+    // [NEW] Restore all sticky elements after capture
+    this.restoreFixedStickyElements(hiddenElements);
+
+    return imageDataUrl;
   }
 
   /**
-   * Captures element that fits in single viewport
+   * [UPDATED] Captures element that fits in single viewport
+   * Uses real content height instead of CSS computed height
    * @param {HTMLElement} element - The element to capture
    * @param {DOMRect} rect - Element bounds
+   * @param {number} contentHeight - The real content height
    * @returns {Promise<string>} Data URL of the captured image
    */
-  static async captureSingleViewport(element, rect) {
-    console.log('[ElementCapturer] Single viewport capture');
-
+  static async captureSingleViewport(element, rect, contentHeight) {
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
 
-    // Hide fixed/sticky elements for clean capture (except those inside target)
-    const hiddenFixedElements = this.hideFixedElements(element);
-    await this.waitForDOMUpdate();
+    const response = await Messaging.sendToBackground({
+      action: 'captureVisibleTab',
+      rect: {
+        x: rect.left + scrollX,
+        y: rect.top + scrollY,
+        width: rect.width,
+        height: contentHeight, // Use real content height instead of rect.height
+        left: rect.left,
+        top: rect.top,
+      },
+      devicePixelRatio: window.devicePixelRatio,
+      scrollX,
+      scrollY,
+    });
 
-    try {
-      // Request visible tab screenshot from background
-      const response = await Messaging.sendToBackground({
-        action: 'captureVisibleTab',
-        rect: {
-          x: rect.left + scrollX,
-          y: rect.top + scrollY,
-          width: rect.width,
-          height: element.scrollHeight, // Use scrollHeight instead of rect.height for actual content height
-          left: rect.left,
-          top: rect.top,
-        },
-        devicePixelRatio: window.devicePixelRatio,
-        scrollX,
-        scrollY,
-      });
-
-      if (!response.success) {
-        throw new Error(response.error || 'Capture failed');
-      }
-
-      // Crop to element bounds
-      const result = await this.cropImage(response.imageData, rect, window.devicePixelRatio);
-
-      // Restore fixed elements
-      this.restoreFixedElements(hiddenFixedElements);
-
-      return result;
-    } catch (error) {
-      // Restore fixed elements on error
-      this.restoreFixedElements(hiddenFixedElements);
-      throw error;
+    if (!response.success) {
+      throw new Error(response.error || 'Capture failed');
     }
+
+    // Crop to element bounds using real content height
+    return await this.cropImage(response.imageData, rect, window.devicePixelRatio, contentHeight);
   }
 
   /**
-   * Captures tall element using multiple scrolls and stitches them together
-   * Uses industry-standard approach: scroll to element top, capture viewport-sized chunks,
-   * position based on absolute scroll offsets (similar to Chrome DevTools)
+   * [UPDATED] Captures tall element using multiple scrolls and stitches them together
+   * Uses real content height to avoid gray space from CSS min-height
    * @param {HTMLElement} element - The element to capture
    * @param {DOMRect} initialRect - Initial element bounds
+   * @param {number} contentHeight - The real content height
+   * @param {number} viewportHeight - window.innerHeight
    * @returns {Promise<string>} Data URL of the stitched image
    */
-  static async captureWithStitching(element, initialRect) {
-    console.log('[ElementCapturer] Starting multi-scroll capture and stitch');
-
+  static async captureWithStitching(element, initialRect, contentHeight, viewportHeight) {
     const dpr = window.devicePixelRatio;
-    const viewportHeight = window.innerHeight;
-
-    // Store original scroll position for restoration
     const originalScrollY = window.scrollY;
 
-    // IMPORTANT: Hide all fixed/sticky elements OUTSIDE target to prevent floating UI duplication
-    const hiddenExternalFixedElements = this.hideFixedElements(element);
-
-    // Wait for DOM to update and ensure hiding takes visual effect
-    await this.waitForDOMUpdate();
-    await this.delay(100);
-
-    // Track fixed elements inside target (hidden after first capture)
-    let hiddenInternalFixedElements = []; // Array format to match external fixed elements
-
     try {
-      // STEP 1: Scroll to element's top to establish predictable starting point
+      // 1. Scroll to top of element
       window.scrollTo({
         top: initialRect.top + originalScrollY,
         behavior: 'instant',
       });
       await this.waitForDOMUpdate();
 
-      console.log('[ElementCapturer] Scrolled to element top');
+      const elementWidth = initialRect.width;
+      const elementAbsoluteTop = initialRect.top + window.scrollY;
 
-      // STEP 2: Capture first section with sticky elements visible
-      console.log('[ElementCapturer] Capturing first section (with sticky elements visible)');
+      // 2. Calculate number of captures needed
+      const numCaptures = Math.ceil(contentHeight / viewportHeight);
+      console.log(`[ElementCapturer] Stitching params: contentHeight=${contentHeight}, viewportHeight=${viewportHeight}, numCaptures=${numCaptures}`);
 
-      const firstResponse = await Messaging.sendToBackground({
-        action: 'captureVisibleTab',
-      });
-
-      if (!firstResponse.success) {
-        throw new Error(`First capture failed: ${firstResponse.error}`);
-      }
-
-      const firstImg = await this.loadImage(firstResponse.imageData);
-      const firstRect = element.getBoundingClientRect();
-
-      // Progress update
-      if (window.elementSelector) {
-        window.elementSelector.updateCaptureProgress(1, '?');
-      }
-
-      // STEP 3: Hide internal sticky elements after first capture
-      let stickyHeight = 0;
-      if (Math.ceil(initialRect.height / viewportHeight) > 1) {
-        console.log('[ElementCapturer] Hiding internal fixed/sticky elements');
-        const hideResult = this.hideFixedElementsInsideTarget(element);
-        hiddenInternalFixedElements = hideResult.elements;
-        stickyHeight = hideResult.totalHeight;
-        await this.waitForDOMUpdate();
-        await this.delay(100);
-      }
-
-      // STEP 4: Recalculate element dimensions after hiding sticky elements
-      const recalcRect = element.getBoundingClientRect();
-      const elementWidth = recalcRect.width;
-      const elementHeight = element.scrollHeight; // Use scrollHeight for actual content height
-      const elementAbsoluteTop = recalcRect.top + window.scrollY;
-      const elementAbsoluteBottom = elementAbsoluteTop + elementHeight;
-
-      // Calculate how much actual content was captured in first section (excluding sticky)
-      const firstVisibleTop = Math.max(0, firstRect.top);
-      const firstVisibleBottom = Math.min(viewportHeight, firstRect.bottom);
-      const firstVisibleHeight = firstVisibleBottom - firstVisibleTop;
-      const firstCaptureContentHeight = firstVisibleHeight - stickyHeight;
-
-      // Recalculate number of captures needed based on remaining content
-      const remainingContent = elementHeight - firstCaptureContentHeight;
-      const remainingCaptures = Math.max(0, Math.ceil(remainingContent / viewportHeight));
-      const numCaptures = 1 + remainingCaptures; // First capture + remaining
-
-      console.log('[ElementCapturer] Recalculated stitching params:', {
-        elementHeight,
-        viewportHeight,
-        numCaptures,
-        elementAbsoluteTop,
-        elementAbsoluteBottom,
-        originalHeight: initialRect.height,
-        heightChange: initialRect.height - elementHeight,
-        stickyHeight,
-        firstCaptureContentHeight,
-        remainingContent,
-        remainingCaptures,
-      });
-
-      // STEP 5: Create canvas with recalculated dimensions (include sticky in final image)
+      // 3. Create final canvas with real content height
       const finalCanvas = document.createElement('canvas');
       finalCanvas.width = Math.round(elementWidth * dpr);
-      finalCanvas.height = Math.round((elementHeight + stickyHeight) * dpr);
+      finalCanvas.height = Math.round(contentHeight * dpr);
       const finalCtx = finalCanvas.getContext('2d');
 
-      // STEP 6: Draw first captured section (includes sticky + content)
-      finalCtx.drawImage(
-        firstImg,
-        Math.round(firstRect.left * dpr),
-        Math.round(firstVisibleTop * dpr),
-        Math.round(elementWidth * dpr),
-        Math.round(firstVisibleHeight * dpr),
-        0,
-        0,
-        Math.round(elementWidth * dpr),
-        Math.round(firstVisibleHeight * dpr)
-      );
+      let capturedHeight = 0;
 
-      console.log('[ElementCapturer] First section stitched (includes sticky)');
-
-      // STEP 7: Capture remaining sections, accounting for sticky height
-      for (let i = 1; i < numCaptures; i++) {
-        // Rate limiting
-        console.log(`[ElementCapturer] Waiting 550ms (rate limit)`);
-        await this.delay(550);
-
-        // Calculate target scroll position: start from where first capture's content ended
-        // First capture got: stickyHeight + firstCaptureContentHeight
-        // Next capture starts at: elementAbsoluteTop + firstCaptureContentHeight
-        const targetScrollY = elementAbsoluteTop + firstCaptureContentHeight + (i - 1) * viewportHeight;
-        const maxScrollY = elementAbsoluteBottom - viewportHeight;
-        const clampedScrollY = Math.min(targetScrollY, Math.max(maxScrollY, elementAbsoluteTop));
-
-        // Scroll to position
-        window.scrollTo({
-          top: clampedScrollY,
-          behavior: 'instant',
-        });
+      // 4. Capture loop
+      for (let i = 0; i < numCaptures; i++) {
+        const scrollY = elementAbsoluteTop + (i * viewportHeight);
+        window.scrollTo({ top: scrollY, behavior: 'instant' });
         await this.waitForDOMUpdate();
 
-        const actualScrollY = window.scrollY;
+        console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}`);
 
-        console.log(
-          `[ElementCapturer] Capture ${i + 1}/${numCaptures}: scroll=${actualScrollY}, target=${targetScrollY}`
-        );
-
-        // Progress update
+        // Update progress indicator
         if (window.elementSelector) {
           window.elementSelector.updateCaptureProgress(i + 1, numCaptures);
         }
 
         // Capture viewport
-        const response = await Messaging.sendToBackground({
-          action: 'captureVisibleTab',
-        });
-
-        if (!response.success) {
-          throw new Error(`Capture ${i + 1} failed: ${response.error}`);
-        }
+        const response = await Messaging.sendToBackground({ action: 'captureVisibleTab' });
+        if (!response.success) throw new Error(`Capture ${i + 1} failed: ${response.error}`);
 
         const img = await this.loadImage(response.imageData);
         const currentRect = element.getBoundingClientRect();
 
-        // Calculate visible portion
-        const visibleTop = Math.max(0, currentRect.top);
-        const visibleBottom = Math.min(viewportHeight, currentRect.bottom);
-        const visibleHeight = visibleBottom - visibleTop;
+        // 5. Calculate source and destination regions
+        const sourceY = (i === 0) ? currentRect.top : 0;
+        const remainingHeight = contentHeight - capturedHeight;
+        const sourceHeight = Math.min(viewportHeight, remainingHeight);
+        const destY = capturedHeight;
 
-        // Calculate canvas position accounting for sticky height
-        // First capture is at canvas Y=0 and includes firstVisibleHeight (sticky + content)
-        // Subsequent captures continue from firstVisibleHeight
-        const offsetFromContentStart = actualScrollY - (elementAbsoluteTop + firstCaptureContentHeight);
-        const destY = firstVisibleHeight + offsetFromContentStart;
-
-        console.log('[ElementCapturer] Stitch params:', {
-          section: i + 1,
-          visibleTop,
-          visibleHeight,
-          offsetFromContentStart,
-          destY,
-        });
-
-        // Draw section
+        // 6. Draw to canvas
         finalCtx.drawImage(
           img,
-          Math.round(currentRect.left * dpr),
-          Math.round(visibleTop * dpr),
-          Math.round(elementWidth * dpr),
-          Math.round(visibleHeight * dpr),
-          0,
-          Math.round(destY * dpr),
-          Math.round(elementWidth * dpr),
-          Math.round(visibleHeight * dpr)
+          Math.round(currentRect.left * dpr), // source x
+          Math.round(sourceY * dpr),        // source y
+          Math.round(elementWidth * dpr),     // source width
+          Math.round(sourceHeight * dpr),   // source height
+          0,                                // dest x
+          Math.round(destY * dpr),          // dest y
+          Math.round(elementWidth * dpr),     // dest width
+          Math.round(sourceHeight * dpr)    // dest height
         );
 
-        console.log(`[ElementCapturer] Section ${i + 1} stitched at destY=${destY}`);
+        capturedHeight += sourceHeight;
+
+        // Rate limiting
+        await this.delay(100);
       }
 
       // Restore original scroll position
-      window.scrollTo({
-        top: originalScrollY,
-        behavior: 'instant',
-      });
-
+      window.scrollTo({ top: originalScrollY, behavior: 'instant' });
       await this.waitForDOMUpdate();
-
-      // Restore all hidden fixed/sticky elements (both external and internal)
-      this.restoreFixedElements(hiddenExternalFixedElements);
-      this.restoreFixedElements(hiddenInternalFixedElements);
 
       console.log('[ElementCapturer] Stitching complete');
       return finalCanvas.toDataURL('image/png');
+
     } catch (error) {
-      // Restore scroll and fixed elements on error
-      window.scrollTo({
-        top: originalScrollY,
-        behavior: 'instant',
-      });
-
-      this.restoreFixedElements(hiddenExternalFixedElements);
-      this.restoreFixedElements(hiddenInternalFixedElements);
-
+      // Restore scroll on error
+      window.scrollTo({ top: originalScrollY, behavior: 'instant' });
       throw error;
     }
   }
@@ -643,72 +415,43 @@ class ElementCapturer {
   }
 
   /**
-   * Crops an image to the specified bounds
+   * [UPDATED] Crops an image to the specified bounds
+   * Uses contentHeight parameter for real content height
    * @param {string} imageData - Base64 encoded image data
    * @param {DOMRect} rect - The rectangle to crop to
    * @param {number} dpr - Device pixel ratio
+   * @param {number} contentHeight - The real content height to use for cropping
    * @returns {Promise<string>} Cropped image data URL
    */
-  static async cropImage(imageData, rect, dpr = 1) {
-    console.log('[ElementCapturer] Cropping image to rect:', rect);
+  static async cropImage(imageData, rect, dpr = 1, contentHeight) {
+    console.log('[ElementCapturer] Cropping image to rect:', rect, 'with contentHeight:', contentHeight);
 
     return new Promise((resolve, reject) => {
       const img = new Image();
-
       img.onload = () => {
         try {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
-          // Calculate viewport dimensions from captured image
-          const viewportWidth = img.width / dpr;
-          const viewportHeight = img.height / dpr;
+          const sourceX = rect.left;
+          const sourceY = rect.top;
+          const sourceWidth = rect.width;
+          const sourceHeight = contentHeight; // Use real content height instead of rect.height
 
-          console.log('[ElementCapturer] Viewport dimensions:', {
-            viewportWidth,
-            viewportHeight,
-            imageWidth: img.width,
-            imageHeight: img.height,
-          });
-
-          // Clamp crop area to what's actually visible in the captured viewport
-          // The element rect is relative to viewport top-left (0, 0)
-          const sourceX = Math.max(0, rect.left);
-          const sourceY = Math.max(0, rect.top);
-          const sourceWidth = Math.min(rect.width, viewportWidth - sourceX);
-          const sourceHeight = Math.min(rect.height, viewportHeight - sourceY);
-
-          // If element extends beyond viewport, warn user
-          if (
-            sourceWidth < rect.width ||
-            sourceHeight < rect.height ||
-            rect.left < 0 ||
-            rect.top < 0
-          ) {
-            console.warn('[ElementCapturer] Element extends beyond viewport, cropping to visible area only', {
-              requested: { width: rect.width, height: rect.height },
-              actual: { width: sourceWidth, height: sourceHeight },
-            });
-          }
-
-          // Set canvas size to actual crop size
           canvas.width = Math.round(sourceWidth * dpr);
           canvas.height = Math.round(sourceHeight * dpr);
 
-          // Scale context for device pixel ratio
-          ctx.scale(dpr, dpr);
-
-          // Draw the cropped portion from the captured viewport image
+          // Draw with device pixel ratio
           ctx.drawImage(
             img,
-            Math.round(sourceX * dpr), // source x in captured image
-            Math.round(sourceY * dpr), // source y in captured image
-            Math.round(sourceWidth * dpr), // source width in captured image
-            Math.round(sourceHeight * dpr), // source height in captured image
-            0, // destination x
-            0, // destination y
-            sourceWidth, // destination width
-            sourceHeight // destination height
+            Math.round(sourceX * dpr),
+            Math.round(sourceY * dpr),
+            Math.round(sourceWidth * dpr),
+            Math.round(sourceHeight * dpr),
+            0,
+            0,
+            Math.round(sourceWidth * dpr),
+            Math.round(sourceHeight * dpr)
           );
 
           const croppedData = canvas.toDataURL('image/png');
@@ -719,11 +462,7 @@ class ElementCapturer {
           reject(error);
         }
       };
-
-      img.onerror = () => {
-        reject(new Error('Failed to load image for cropping'));
-      };
-
+      img.onerror = () => reject(new Error('Failed to load image for cropping'));
       img.src = imageData;
     });
   }
