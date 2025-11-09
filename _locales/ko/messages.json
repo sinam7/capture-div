@@ -1,0 +1,218 @@
+{
+  "extName": {
+    "message": "Capture div",
+    "description": "확장 프로그램 이름"
+  },
+  "extDescription": {
+    "message": "웹 요소를 정밀하게 캡처하고 전문적인 도구로 스크린샷 편집",
+    "description": "확장 프로그램 설명"
+  },
+
+  "popupTitle": {
+    "message": "요소 스크린샷",
+    "description": "팝업 제목"
+  },
+  "popupDescription": {
+    "message": "페이지의 특정 요소를 스크린샷으로 캡처",
+    "description": "팝업 설명"
+  },
+  "startSelectionBtn": {
+    "message": "선택 시작",
+    "description": "선택 시작 버튼"
+  },
+
+  "howToUseTitle": {
+    "message": "사용 방법:",
+    "description": "사용 방법 섹션 제목"
+  },
+  "howToUseStep1": {
+    "message": "\"선택 시작\" 클릭",
+    "description": "사용 방법 1단계"
+  },
+  "howToUseStep2": {
+    "message": "요소에 마우스를 올려 하이라이트 표시",
+    "description": "사용 방법 2단계"
+  },
+  "howToUseStep3": {
+    "message": "요소를 클릭하여 선택",
+    "description": "사용 방법 3단계"
+  },
+  "howToUseStep4": {
+    "message": "슬라이더로 선택 영역 조정",
+    "description": "사용 방법 4단계"
+  },
+  "howToUseStep5": {
+    "message": "\"캡처\" 클릭하여 스크린샷 촬영",
+    "description": "사용 방법 5단계"
+  },
+
+  "keyboardShortcutsTitle": {
+    "message": "키보드 단축키:",
+    "description": "키보드 단축키 섹션 제목"
+  },
+  "shortcutEsc": {
+    "message": "선택 취소",
+    "description": "ESC 단축키 설명"
+  },
+  "shortcutUpLeft": {
+    "message": "부모 요소 선택",
+    "description": "위/왼쪽 화살표 단축키 설명"
+  },
+  "shortcutDownRight": {
+    "message": "자식 요소 선택",
+    "description": "아래/오른쪽 화살표 단축키 설명"
+  },
+
+  "toolSelect": {
+    "message": "선택",
+    "description": "선택 도구"
+  },
+  "toolCrop": {
+    "message": "자르기",
+    "description": "자르기 도구"
+  },
+  "toolText": {
+    "message": "텍스트",
+    "description": "텍스트 도구"
+  },
+  "toolArrow": {
+    "message": "화살표",
+    "description": "화살표 도구"
+  },
+  "toolRectangle": {
+    "message": "사각형",
+    "description": "사각형 도구"
+  },
+  "toolCircle": {
+    "message": "원",
+    "description": "원 도구"
+  },
+  "toolLine": {
+    "message": "선",
+    "description": "선 도구"
+  },
+  "toolBlur": {
+    "message": "흐림",
+    "description": "흐림 도구"
+  },
+  "toolMosaic": {
+    "message": "모자이크",
+    "description": "모자이크 도구"
+  },
+
+  "actionUndo": {
+    "message": "실행 취소",
+    "description": "실행 취소 동작"
+  },
+  "actionRedo": {
+    "message": "다시 실행",
+    "description": "다시 실행 동작"
+  },
+  "actionZoomOut": {
+    "message": "축소",
+    "description": "축소 동작"
+  },
+  "actionZoomIn": {
+    "message": "확대",
+    "description": "확대 동작"
+  },
+  "actionFit": {
+    "message": "맞춤",
+    "description": "화면 맞춤 동작"
+  },
+  "actionActualSize": {
+    "message": "100%",
+    "description": "실제 크기 동작"
+  },
+
+  "colorPickerTitle": {
+    "message": "색상",
+    "description": "색상 선택기 제목"
+  },
+  "strokeWidthTitle": {
+    "message": "선 굵기",
+    "description": "선 굵기 제목"
+  },
+
+  "noImageLoaded": {
+    "message": "이미지가 로드되지 않음",
+    "description": "이미지 미로드 메시지"
+  },
+  "btnReset": {
+    "message": "재설정",
+    "description": "재설정 버튼"
+  },
+  "btnCopyClipboard": {
+    "message": "클립보드에 복사",
+    "description": "클립보드 복사 버튼"
+  },
+  "btnDownloadPng": {
+    "message": "PNG 다운로드",
+    "description": "PNG 다운로드 버튼"
+  },
+  "btnDownloadJpg": {
+    "message": "JPG 다운로드",
+    "description": "JPG 다운로드 버튼"
+  },
+
+  "tooltipSelect": {
+    "message": "선택 (V)",
+    "description": "선택 도구 툴팁"
+  },
+  "tooltipCrop": {
+    "message": "자르기 (C)",
+    "description": "자르기 도구 툴팁"
+  },
+  "tooltipText": {
+    "message": "텍스트 (T)",
+    "description": "텍스트 도구 툴팁"
+  },
+  "tooltipArrow": {
+    "message": "화살표 (A)",
+    "description": "화살표 도구 툴팁"
+  },
+  "tooltipRectangle": {
+    "message": "사각형 (R)",
+    "description": "사각형 도구 툴팁"
+  },
+  "tooltipCircle": {
+    "message": "원 (O)",
+    "description": "원 도구 툴팁"
+  },
+  "tooltipLine": {
+    "message": "선 (L)",
+    "description": "선 도구 툴팁"
+  },
+  "tooltipBlur": {
+    "message": "흐림 (B)",
+    "description": "흐림 도구 툴팁"
+  },
+  "tooltipMosaic": {
+    "message": "모자이크 (M)",
+    "description": "모자이크 도구 툴팁"
+  },
+  "tooltipUndo": {
+    "message": "실행 취소 (Ctrl+Z)",
+    "description": "실행 취소 툴팁"
+  },
+  "tooltipRedo": {
+    "message": "다시 실행 (Ctrl+Y)",
+    "description": "다시 실행 툴팁"
+  },
+  "tooltipZoomOut": {
+    "message": "축소 (-)",
+    "description": "축소 툴팁"
+  },
+  "tooltipZoomIn": {
+    "message": "확대 (+)",
+    "description": "확대 툴팁"
+  },
+  "tooltipFitScreen": {
+    "message": "화면 맞춤 (F)",
+    "description": "화면 맞춤 툴팁"
+  },
+  "tooltipActualSize": {
+    "message": "실제 크기 (0)",
+    "description": "실제 크기 툴팁"
+  }
+}
