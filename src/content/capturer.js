@@ -472,6 +472,15 @@ class ElementCapturer {
         heightChange: initialRect.height - elementHeight,
       });
 
+      // IMPORTANT: Re-scroll to element's NEW top position after hiding sticky elements
+      // The element's position in document has changed, so we need to adjust
+      console.log('[ElementCapturer] Re-scrolling to new element top position:', elementAbsoluteTop);
+      window.scrollTo({
+        top: elementAbsoluteTop,
+        behavior: 'instant',
+      });
+      await this.waitForDOMUpdate();
+
       // STEP 5: Create canvas with recalculated dimensions
       const finalCanvas = document.createElement('canvas');
       finalCanvas.width = Math.round(elementWidth * dpr);
