@@ -28,7 +28,8 @@ class ElementCapturer {
       await this.waitForDOMUpdate();
 
       // Step 4: Try html2canvas first (best for elements outside viewport)
-      if (typeof html2canvas !== 'undefined') {
+      // Disabled due to CSP conflicts with external CSS loading causing timeouts
+      if (false) {
         console.log('[ElementCapturer] Using html2canvas method');
         return await this.captureWithHtml2Canvas(element);
       }
@@ -334,7 +335,8 @@ class ElementCapturer {
       });
 
       // Check if element is taller than viewport
-      const needsStitching = initialRect.height > viewportHeight * 0.9; // Use 90% to account for edges
+      // Use scrollHeight instead of getBoundingClientRect().height to avoid CSS computed height issues
+      const needsStitching = element.scrollHeight > viewportHeight * 0.9; // Use 90% to account for edges
 
       if (needsStitching) {
         console.log('[ElementCapturer] Element larger than viewport, using multi-scroll capture');
@@ -373,7 +375,7 @@ class ElementCapturer {
           x: rect.left + scrollX,
           y: rect.top + scrollY,
           width: rect.width,
-          height: rect.height,
+          height: element.scrollHeight, // Use scrollHeight instead of rect.height for actual content height
           left: rect.left,
           top: rect.top,
         },
@@ -470,7 +472,7 @@ class ElementCapturer {
       // STEP 4: Recalculate element dimensions after hiding sticky elements
       const recalcRect = element.getBoundingClientRect();
       const elementWidth = recalcRect.width;
-      const elementHeight = recalcRect.height;
+      const elementHeight = element.scrollHeight; // Use scrollHeight for actual content height
       const elementAbsoluteTop = recalcRect.top + window.scrollY;
       const elementAbsoluteBottom = elementAbsoluteTop + elementHeight;
 
