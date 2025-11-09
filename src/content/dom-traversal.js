@@ -114,6 +114,39 @@ class DOMTraversal {
   }
 
   /**
+   * Gets the deepest visible child element
+   * @param {HTMLElement} element - The starting element
+   * @returns {HTMLElement} The deepest visible child or the element itself
+   */
+  static getDeepestVisibleChild(element) {
+    if (!element) return null;
+
+    let deepest = element;
+    let currentDepth = this.getElementDepth(element);
+    let maxDepth = currentDepth;
+
+    const traverse = (el) => {
+      const children = this.getVisibleChildren(el);
+
+      for (let child of children) {
+        if (this.shouldExcludeElement(child)) continue;
+
+        const childDepth = this.getElementDepth(child);
+        if (childDepth > maxDepth) {
+          maxDepth = childDepth;
+          deepest = child;
+        }
+
+        // Recursively check children
+        traverse(child);
+      }
+    };
+
+    traverse(element);
+    return deepest;
+  }
+
+  /**
    * Builds a path string for an element (e.g., "html > body > div > p")
    * @param {HTMLElement} element - The element to build path for
    * @returns {string} The element path
