@@ -121,10 +121,12 @@ class ImageEditor {
     const zoomInBtn = document.getElementById('zoomInBtn');
     const zoomOutBtn = document.getElementById('zoomOutBtn');
     const fitScreenBtn = document.getElementById('fitScreenBtn');
+    const actualSizeBtn = document.getElementById('actualSizeBtn');
 
     zoomInBtn?.addEventListener('click', () => this.zoomIn());
     zoomOutBtn?.addEventListener('click', () => this.zoomOut());
     fitScreenBtn?.addEventListener('click', () => this.fitToScreen());
+    actualSizeBtn?.addEventListener('click', () => this.setZoom(1.0));
 
     // Mouse wheel zoom
     this.canvasWrapper.addEventListener('wheel', (e) => {
@@ -237,6 +239,11 @@ class ImageEditor {
       if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         this.fitToScreen();
+      }
+
+      if (e.key === '0' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        this.setZoom(1.0);
       }
 
       // Tool shortcuts

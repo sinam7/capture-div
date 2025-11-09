@@ -61,6 +61,9 @@ class CropTool extends BaseTool {
       return;
     }
 
+    // IMPORTANT: Restore clean image before applying crop (removes overlay)
+    this.canvasManager.putImageData(this.savedImageData);
+
     // Apply the crop
     this.applyCrop();
 

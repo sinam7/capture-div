@@ -133,10 +133,10 @@ body {
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  display: grid;
+  place-items: center;
   padding: 20px;
+  min-height: min-content;
 }
 
 .editor-canvas {
@@ -146,7 +146,6 @@ body {
   transform-origin: top left;
   transition: none;
   display: block;
-  margin: auto;
 }
 
 .editor-canvas.cursor-default {
