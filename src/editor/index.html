@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Screenshot - Element Screenshot Editor</title>
+    <link rel="stylesheet" href="editor.css" />
+  </head>
+  <body>
+    <div class="editor-container">
+      <!-- Toolbar -->
+      <div class="editor-toolbar">
+        <div class="editor-toolbar__section">
+          <button class="editor-toolbar__btn" data-tool="select" title="Select (V)">
+            <span class="icon">↖</span>
+            <span class="label">Select</span>
+          </button>
+          <button class="editor-toolbar__btn" data-tool="crop" title="Crop (C)">
+            <span class="icon">⊡</span>
+            <span class="label">Crop</span>
+          </button>
+        </div>
+
+        <div class="editor-toolbar__divider"></div>
+
+        <div class="editor-toolbar__section">
+          <button class="editor-toolbar__btn" data-tool="text" title="Text (T)">
+            <span class="icon">T</span>
+            <span class="label">Text</span>
+          </button>
+          <button class="editor-toolbar__btn" data-tool="arrow" title="Arrow (A)">
+            <span class="icon">↗</span>
+            <span class="label">Arrow</span>
+          </button>
+          <button class="editor-toolbar__btn" data-tool="rectangle" title="Rectangle (R)">
+            <span class="icon">▭</span>
+            <span class="label">Rectangle</span>
+          </button>
+          <button class="editor-toolbar__btn" data-tool="circle" title="Circle (O)">
+            <span class="icon">○</span>
+            <span class="label">Circle</span>
+          </button>
+          <button class="editor-toolbar__btn" data-tool="line" title="Line (L)">
+            <span class="icon">─</span>
+            <span class="label">Line</span>
+          </button>
+        </div>
+
+        <div class="editor-toolbar__divider"></div>
+
+        <div class="editor-toolbar__section">
+          <button class="editor-toolbar__btn" data-tool="blur" title="Blur (B)">
+            <span class="icon">◐</span>
+            <span class="label">Blur</span>
+          </button>
+          <button class="editor-toolbar__btn" data-tool="mosaic" title="Mosaic (M)">
+            <span class="icon">▦</span>
+            <span class="label">Mosaic</span>
+          </button>
+        </div>
+
+        <div class="editor-toolbar__divider"></div>
+
+        <div class="editor-toolbar__section">
+          <button
+            class="editor-toolbar__btn"
+            data-action="undo"
+            title="Undo (Ctrl+Z)"
+            id="undoBtn"
+            disabled
+          >
+            <span class="icon">↶</span>
+            <span class="label">Undo</span>
+          </button>
+          <button
+            class="editor-toolbar__btn"
+            data-action="redo"
+            title="Redo (Ctrl+Y)"
+            id="redoBtn"
+            disabled
+          >
+            <span class="icon">↷</span>
+            <span class="label">Redo</span>
+          </button>
+        </div>
+
+        <div class="editor-toolbar__spacer"></div>
+
+        <div class="editor-toolbar__section">
+          <input type="color" id="colorPicker" value="#ff0000" title="Color" />
+          <input
+            type="range"
+            id="strokeWidth"
+            min="1"
+            max="20"
+            value="3"
+            title="Stroke Width"
+          />
+          <span id="strokeWidthValue">3px</span>
+        </div>
+      </div>
+
+      <!-- Canvas Area -->
+      <div class="editor-canvas-wrapper">
+        <canvas id="editorCanvas" class="editor-canvas"></canvas>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="editor-actions">
+        <div class="editor-actions__info">
+          <span id="imageInfo">No image loaded</span>
+        </div>
+
+        <div class="editor-actions__buttons">
+          <button class="editor-btn editor-btn--secondary" id="resetBtn">Reset</button>
+          <button class="editor-btn editor-btn--secondary" id="copyBtn">
+            📋 Copy to Clipboard
+          </button>
+          <button class="editor-btn editor-btn--primary" id="downloadPngBtn">
+            ⬇ Download PNG
+          </button>
+          <button class="editor-btn editor-btn--primary" id="downloadJpgBtn">
+            ⬇ Download JPG
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tool Options Panel (Dynamic) -->
+    <div class="editor-options" id="toolOptions">
+      <!-- Tool-specific options will be inserted here -->
+    </div>
+
+    <!-- Scripts -->
+    <script src="../utils/storage.js"></script>
+    <script src="canvas-manager.js"></script>
+    <script src="history-manager.js"></script>
+    <script src="tools/base-tool.js"></script>
+    <script src="tools/crop-tool.js"></script>
+    <script src="tools/text-tool.js"></script>
+    <script src="tools/arrow-tool.js"></script>
+    <script src="tools/shape-tool.js"></script>
+    <script src="tools/blur-tool.js"></script>
+    <script src="tools/mosaic-tool.js"></script>
+    <script src="editor.js"></script>
+  </body>
+</html>

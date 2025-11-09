@@ -1,0 +1,339 @@
+/**
+ * Image Editor Styles
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Toolbar */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.editor-toolbar__section {
+  display: flex;
+  gap: 4px;
+}
+
+.editor-toolbar__divider {
+  width: 1px;
+  height: 32px;
+  background: #e0e0e0;
+  margin: 0 4px;
+}
+
+.editor-toolbar__spacer {
+  flex: 1;
+}
+
+.editor-toolbar__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+}
+
+.editor-toolbar__btn:hover {
+  background: #f5f5f5;
+  border-color: #ddd;
+}
+
+.editor-toolbar__btn.active {
+  background: #e3f2fd;
+  border-color: #4285f4;
+  color: #4285f4;
+}
+
+.editor-toolbar__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-toolbar__btn .icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.editor-toolbar__btn .label {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+#colorPicker {
+  width: 40px;
+  height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#strokeWidth {
+  width: 80px;
+}
+
+#strokeWidthValue {
+  font-size: 12px;
+  color: #666;
+  min-width: 35px;
+}
+
+/* Canvas Area */
+.editor-canvas-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  overflow: auto;
+  background: #f5f5f5;
+  background-image: linear-gradient(45deg, #eee 25%, transparent 25%),
+    linear-gradient(-45deg, #eee 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #eee 75%),
+    linear-gradient(-45deg, transparent 75%, #eee 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.editor-canvas {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background: white;
+  cursor: crosshair;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.editor-canvas.cursor-default {
+  cursor: default;
+}
+
+.editor-canvas.cursor-move {
+  cursor: move;
+}
+
+.editor-canvas.cursor-text {
+  cursor: text;
+}
+
+.editor-canvas.cursor-crosshair {
+  cursor: crosshair;
+}
+
+/* Bottom Actions */
+.editor-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.editor-actions__info {
+  font-size: 13px;
+  color: #666;
+}
+
+.editor-actions__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.editor-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.editor-btn--primary {
+  background: #4285f4;
+  color: white;
+}
+
+.editor-btn--primary:hover {
+  background: #3367d6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.4);
+}
+
+.editor-btn--secondary {
+  background: #f1f3f4;
+  color: #333;
+}
+
+.editor-btn--secondary:hover {
+  background: #e0e0e0;
+}
+
+.editor-btn:active {
+  transform: translateY(0);
+}
+
+.editor-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Tool Options Panel */
+.editor-options {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  max-width: 300px;
+  display: none;
+}
+
+.editor-options.visible {
+  display: block;
+}
+
+.editor-options h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.editor-options__field {
+  margin-bottom: 12px;
+}
+
+.editor-options__field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #666;
+}
+
+.editor-options__field input,
+.editor-options__field select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.editor-options__field input[type='range'] {
+  padding: 0;
+}
+
+.editor-options__field input[type='checkbox'] {
+  width: auto;
+  margin-right: 6px;
+}
+
+/* Loading State */
+.editor-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1000;
+}
+
+.editor-loading__spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #4285f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.editor-loading__text {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Notification */
+.editor-notification {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #323232;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  z-index: 1001;
+  animation: slideDown 0.3s ease;
+}
+
+.editor-notification--success {
+  background: #34a853;
+}
+
+.editor-notification--error {
+  background: #ea4335;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
