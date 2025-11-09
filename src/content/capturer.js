@@ -357,7 +357,9 @@ class ElementCapturer {
 
       // 4. Capture loop
       for (let i = 0; i < numCaptures; i++) {
-        const scrollY = elementAbsoluteTop + (i * viewportHeight);
+        // [FIXED] Use capturedHeight instead of i*viewportHeight for accurate positioning
+        // This ensures we scroll to where the previous capture ended, not a fixed interval
+        const scrollY = elementAbsoluteTop + capturedHeight;
         window.scrollTo({ top: scrollY, behavior: 'instant' });
         await this.waitForDOMUpdate();
 
@@ -367,7 +369,7 @@ class ElementCapturer {
         allHiddenElements.push(...newlyHiddenElements);
         await this.waitForDOMUpdate();
 
-        console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}, hidden ${newlyHiddenElements.length} sticky elements at this scroll position`);
+        console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}, scrollY=${scrollY}, capturedHeight=${capturedHeight}, hidden ${newlyHiddenElements.length} sticky elements`);
 
         // Update progress indicator
         if (window.elementSelector) {
