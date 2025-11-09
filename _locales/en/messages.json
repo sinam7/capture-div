@@ -1,0 +1,218 @@
+{
+  "extName": {
+    "message": "Capture div",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Capture any web element with precision and edit screenshots using professional tools",
+    "description": "Extension description"
+  },
+
+  "popupTitle": {
+    "message": "Element Screenshot",
+    "description": "Popup title"
+  },
+  "popupDescription": {
+    "message": "Capture screenshots of specific elements on the page",
+    "description": "Popup description"
+  },
+  "startSelectionBtn": {
+    "message": "Start Selection",
+    "description": "Start selection button"
+  },
+
+  "howToUseTitle": {
+    "message": "How to use:",
+    "description": "How to use section title"
+  },
+  "howToUseStep1": {
+    "message": "Click \"Start Selection\"",
+    "description": "How to use step 1"
+  },
+  "howToUseStep2": {
+    "message": "Hover over elements to highlight them",
+    "description": "How to use step 2"
+  },
+  "howToUseStep3": {
+    "message": "Click an element to select it",
+    "description": "How to use step 3"
+  },
+  "howToUseStep4": {
+    "message": "Use the slider to adjust selection",
+    "description": "How to use step 4"
+  },
+  "howToUseStep5": {
+    "message": "Click \"Capture\" to take screenshot",
+    "description": "How to use step 5"
+  },
+
+  "keyboardShortcutsTitle": {
+    "message": "Keyboard shortcuts:",
+    "description": "Keyboard shortcuts section title"
+  },
+  "shortcutEsc": {
+    "message": "Cancel selection",
+    "description": "ESC shortcut description"
+  },
+  "shortcutUpLeft": {
+    "message": "Select parent",
+    "description": "Up/Left arrow shortcut description"
+  },
+  "shortcutDownRight": {
+    "message": "Select child",
+    "description": "Down/Right arrow shortcut description"
+  },
+
+  "toolSelect": {
+    "message": "Select",
+    "description": "Select tool"
+  },
+  "toolCrop": {
+    "message": "Crop",
+    "description": "Crop tool"
+  },
+  "toolText": {
+    "message": "Text",
+    "description": "Text tool"
+  },
+  "toolArrow": {
+    "message": "Arrow",
+    "description": "Arrow tool"
+  },
+  "toolRectangle": {
+    "message": "Rectangle",
+    "description": "Rectangle tool"
+  },
+  "toolCircle": {
+    "message": "Circle",
+    "description": "Circle tool"
+  },
+  "toolLine": {
+    "message": "Line",
+    "description": "Line tool"
+  },
+  "toolBlur": {
+    "message": "Blur",
+    "description": "Blur tool"
+  },
+  "toolMosaic": {
+    "message": "Mosaic",
+    "description": "Mosaic tool"
+  },
+
+  "actionUndo": {
+    "message": "Undo",
+    "description": "Undo action"
+  },
+  "actionRedo": {
+    "message": "Redo",
+    "description": "Redo action"
+  },
+  "actionZoomOut": {
+    "message": "Zoom Out",
+    "description": "Zoom out action"
+  },
+  "actionZoomIn": {
+    "message": "Zoom In",
+    "description": "Zoom in action"
+  },
+  "actionFit": {
+    "message": "Fit",
+    "description": "Fit to screen action"
+  },
+  "actionActualSize": {
+    "message": "100%",
+    "description": "Actual size action"
+  },
+
+  "colorPickerTitle": {
+    "message": "Color",
+    "description": "Color picker title"
+  },
+  "strokeWidthTitle": {
+    "message": "Stroke Width",
+    "description": "Stroke width title"
+  },
+
+  "noImageLoaded": {
+    "message": "No image loaded",
+    "description": "No image loaded message"
+  },
+  "btnReset": {
+    "message": "Reset",
+    "description": "Reset button"
+  },
+  "btnCopyClipboard": {
+    "message": "Copy to Clipboard",
+    "description": "Copy to clipboard button"
+  },
+  "btnDownloadPng": {
+    "message": "Download PNG",
+    "description": "Download PNG button"
+  },
+  "btnDownloadJpg": {
+    "message": "Download JPG",
+    "description": "Download JPG button"
+  },
+
+  "tooltipSelect": {
+    "message": "Select (V)",
+    "description": "Select tool tooltip"
+  },
+  "tooltipCrop": {
+    "message": "Crop (C)",
+    "description": "Crop tool tooltip"
+  },
+  "tooltipText": {
+    "message": "Text (T)",
+    "description": "Text tool tooltip"
+  },
+  "tooltipArrow": {
+    "message": "Arrow (A)",
+    "description": "Arrow tool tooltip"
+  },
+  "tooltipRectangle": {
+    "message": "Rectangle (R)",
+    "description": "Rectangle tool tooltip"
+  },
+  "tooltipCircle": {
+    "message": "Circle (O)",
+    "description": "Circle tool tooltip"
+  },
+  "tooltipLine": {
+    "message": "Line (L)",
+    "description": "Line tool tooltip"
+  },
+  "tooltipBlur": {
+    "message": "Blur (B)",
+    "description": "Blur tool tooltip"
+  },
+  "tooltipMosaic": {
+    "message": "Mosaic (M)",
+    "description": "Mosaic tool tooltip"
+  },
+  "tooltipUndo": {
+    "message": "Undo (Ctrl+Z)",
+    "description": "Undo tooltip"
+  },
+  "tooltipRedo": {
+    "message": "Redo (Ctrl+Y)",
+    "description": "Redo tooltip"
+  },
+  "tooltipZoomOut": {
+    "message": "Zoom Out (-)",
+    "description": "Zoom out tooltip"
+  },
+  "tooltipZoomIn": {
+    "message": "Zoom In (+)",
+    "description": "Zoom in tooltip"
+  },
+  "tooltipFitScreen": {
+    "message": "Fit to Screen (F)",
+    "description": "Fit to screen tooltip"
+  },
+  "tooltipActualSize": {
+    "message": "Actual Size (0)",
+    "description": "Actual size tooltip"
+  }
+}
