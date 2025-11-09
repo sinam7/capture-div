@@ -10,18 +10,21 @@ A Chrome extension for capturing screenshots of specific web page elements with 
 - Use the slider to navigate up/down the DOM tree
 - Precise element targeting with parent/child traversal
 
-### Image Editing (Coming Soon)
-- Crop and resize
-- Add text annotations
-- Draw arrows and shapes
-- Apply blur and mosaic effects
-- Adjust colors and brightness
-- Undo/Redo support
+### Image Editing
+- **Crop and resize** - Select and crop to specific areas
+- **Text annotations** - Add text with customizable font and size
+- **Draw arrows** - Point out important elements
+- **Shapes** - Rectangle, circle, and line tools with fill options
+- **Blur effect** - Privacy-protect sensitive information
+- **Mosaic effect** - Pixelate areas for privacy
+- **Color picker** - Choose any color for annotations
+- **Stroke width** - Adjustable line thickness
+- **Undo/Redo** - Full history management (up to 50 states)
 
-### Export Options (Coming Soon)
-- Download as PNG or JPG
-- Copy to clipboard
-- Automatic filename generation
+### Export Options
+- **Download as PNG or JPG** - High-quality image export
+- **Copy to clipboard** - Quick sharing
+- **Automatic filename generation** - Timestamped filenames
 
 ## Installation
 
@@ -34,14 +37,38 @@ A Chrome extension for capturing screenshots of specific web page elements with 
 
 ## Usage
 
+### Capturing Elements
 1. Click the extension icon in your toolbar
 2. Click "Start Selection" button
 3. Hover over elements to see them highlighted
 4. Click on an element to select it
 5. Use the slider to adjust the selection (move left for parent elements, right for children)
 6. Click "Capture" to take a screenshot
-7. Edit your screenshot in the editor (coming soon)
-8. Save or copy to clipboard (coming soon)
+
+### Editing Screenshots
+The editor will open automatically after capture with a full suite of tools:
+
+**Available Tools** (keyboard shortcuts in parentheses):
+- **Crop (C)** - Trim your screenshot to the perfect size
+- **Text (T)** - Add text annotations
+- **Arrow (A)** - Draw directional arrows
+- **Rectangle (R)** - Draw rectangles (with fill option)
+- **Circle (O)** - Draw circles (with fill option)
+- **Line (L)** - Draw straight lines
+- **Blur (B)** - Blur sensitive information
+- **Mosaic (M)** - Pixelate areas for privacy
+
+**Editing Controls**:
+- **Color Picker** - Choose annotation colors
+- **Stroke Width** - Adjust line thickness (1-20px)
+- **Undo (Ctrl+Z)** - Undo last action
+- **Redo (Ctrl+Y)** - Redo last undone action
+- **Reset** - Restore original image
+
+**Exporting**:
+- **Copy to Clipboard** - Quick sharing via paste
+- **Download PNG** - High-quality lossless format
+- **Download JPG** - Compressed format for smaller file size
 
 ## Development
 
@@ -84,11 +111,32 @@ Contributions are welcome! Please read [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.
 
 ## Roadmap
 
-- [x] Sprint 1: Element selection system (In Progress)
-- [ ] Sprint 2: Basic image editor
-- [ ] Sprint 3: Advanced editing tools
-- [ ] Sprint 4: Save and export functionality
-- [ ] Sprint 5: Chrome Web Store deployment
+- [x] Sprint 1: Element selection system ✓
+- [x] Sprint 2: Basic image editor ✓
+- [x] Sprint 3: Advanced editing tools ✓
+- [x] Sprint 4: Save and export functionality ✓
+- [ ] Sprint 5: Chrome Web Store deployment (Next)
+
+## Keyboard Shortcuts
+
+### Element Selection
+- `ESC` - Cancel selection or deselect current element
+- `↑` / `←` - Select parent element
+- `↓` / `→` - Select child element
+
+### Image Editor
+- `V` - Select tool (default)
+- `C` - Crop tool
+- `T` - Text tool
+- `A` - Arrow tool
+- `R` - Rectangle tool
+- `O` - Circle tool
+- `L` - Line tool
+- `B` - Blur tool
+- `M` - Mosaic tool
+- `Ctrl+Z` - Undo
+- `Ctrl+Y` - Redo
+- `ESC` - Deselect current tool
 
 ## Support
 
