@@ -122,6 +122,47 @@ class ElementCapturer {
   }
 
   /**
+   * Hides fixed/sticky positioned elements INSIDE target element
+   * Called after first capture to prevent duplication in subsequent captures
+   * @param {HTMLElement} targetElement - The element being captured
+   * @returns {Array} Array of {element, originalPosition, originalDisplay}
+   */
+  static hideFixedElementsInsideTarget(targetElement) {
+    console.log('[ElementCapturer] Hiding fixed/sticky elements inside target');
+
+    const hiddenElements = [];
+    const allElements = targetElement.querySelectorAll('*');
+
+    allElements.forEach((element) => {
+      const computedStyle = window.getComputedStyle(element);
+      const position = computedStyle.position;
+
+      // Check if element is fixed or sticky positioned
+      if (position === 'fixed' || position === 'sticky') {
+        // Store original values
+        hiddenElements.push({
+          element: element,
+          originalPosition: element.style.position,
+          originalDisplay: element.style.display,
+          computedPosition: position,
+        });
+
+        // Hide the element
+        element.style.display = 'none';
+
+        console.log('[ElementCapturer] Hidden internal fixed/sticky element:', {
+          tag: element.tagName,
+          class: element.className,
+          position: position,
+        });
+      }
+    });
+
+    console.log(`[ElementCapturer] Hidden ${hiddenElements.length} internal fixed/sticky elements`);
+    return hiddenElements;
+  }
+
+  /**
    * Restores previously hidden fixed/sticky elements
    * @param {Array} hiddenElements - Array from hideFixedElements()
    */
@@ -381,12 +422,14 @@ class ElementCapturer {
       elementAbsoluteBottom,
     });
 
-    // IMPORTANT: Hide all fixed/sticky elements to prevent floating UI duplication
-    // Pass the target element so we don't hide fixed elements that are part of its content
-    const hiddenFixedElements = this.hideFixedElements(element);
+    // IMPORTANT: Hide all fixed/sticky elements OUTSIDE target to prevent floating UI duplication
+    // We keep fixed elements inside target visible for first capture, then hide them
+    const hiddenExternalFixedElements = this.hideFixedElements(element);
 
-    // Wait for DOM to update after hiding elements
+    // IMPORTANT: Wait for DOM to update and ensure hiding takes visual effect
     await this.waitForDOMUpdate();
+    // Extra delay to ensure external floating UI hiding is fully rendered before first capture
+    await this.delay(100);
 
     // Create canvas for final stitched image
     const finalCanvas = document.createElement('canvas');
@@ -394,7 +437,11 @@ class ElementCapturer {
     finalCanvas.height = Math.round(elementHeight * dpr);
     const finalCtx = finalCanvas.getContext('2d');
 
+    // Track fixed elements inside target (hidden after first capture)
+    let hiddenInternalFixedElements = [];
+
     try {
+
       // STEP 1: Scroll to element's top to establish predictable starting point
       // (Industry standard: Chrome DevTools, Firefox all start from element top)
       window.scrollTo({
@@ -493,6 +540,15 @@ class ElementCapturer {
         );
 
         console.log(`[ElementCapturer] Section ${i + 1} stitched at destY=${destY}`);
+
+        // IMPORTANT: After first capture, hide fixed/sticky elements INSIDE target
+        // to prevent duplication in subsequent captures
+        if (i === 0 && numCaptures > 1) {
+          console.log('[ElementCapturer] First capture complete, hiding internal fixed elements');
+          hiddenInternalFixedElements = this.hideFixedElementsInsideTarget(element);
+          await this.waitForDOMUpdate();
+          await this.delay(100); // Ensure hiding takes effect
+        }
       }
 
       // Restore original scroll position
@@ -503,8 +559,9 @@ class ElementCapturer {
 
       await this.waitForDOMUpdate();
 
-      // Restore fixed/sticky elements
-      this.restoreFixedElements(hiddenFixedElements);
+      // Restore all hidden fixed/sticky elements (both external and internal)
+      this.restoreFixedElements(hiddenExternalFixedElements);
+      this.restoreFixedElements(hiddenInternalFixedElements);
 
       console.log('[ElementCapturer] Stitching complete');
       return finalCanvas.toDataURL('image/png');
@@ -515,7 +572,8 @@ class ElementCapturer {
         behavior: 'instant',
       });
 
-      this.restoreFixedElements(hiddenFixedElements);
+      this.restoreFixedElements(hiddenExternalFixedElements);
+      this.restoreFixedElements(hiddenInternalFixedElements);
 
       throw error;
     }
