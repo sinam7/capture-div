@@ -71,6 +71,74 @@ class ElementCapturer {
   }
 
   /**
+   * Hides all fixed/sticky positioned elements (floating UI)
+   * Returns array of hidden elements for later restoration
+   * @returns {Array} Array of {element, originalPosition, originalDisplay}
+   */
+  static hideFixedElements() {
+    console.log('[ElementCapturer] Hiding fixed/sticky positioned elements');
+
+    const hiddenElements = [];
+    const allElements = document.querySelectorAll('*');
+
+    allElements.forEach((element) => {
+      const computedStyle = window.getComputedStyle(element);
+      const position = computedStyle.position;
+
+      // Check if element is fixed or sticky positioned
+      if (position === 'fixed' || position === 'sticky') {
+        // Skip if it's part of the target element we're capturing
+        // (we'll handle this by checking ancestry later)
+
+        // Store original values
+        hiddenElements.push({
+          element: element,
+          originalPosition: element.style.position,
+          originalDisplay: element.style.display,
+          computedPosition: position,
+        });
+
+        // Hide the element
+        element.style.display = 'none';
+
+        console.log('[ElementCapturer] Hidden fixed/sticky element:', {
+          tag: element.tagName,
+          class: element.className,
+          position: position,
+        });
+      }
+    });
+
+    console.log(`[ElementCapturer] Hidden ${hiddenElements.length} fixed/sticky elements`);
+    return hiddenElements;
+  }
+
+  /**
+   * Restores previously hidden fixed/sticky elements
+   * @param {Array} hiddenElements - Array from hideFixedElements()
+   */
+  static restoreFixedElements(hiddenElements) {
+    console.log(`[ElementCapturer] Restoring ${hiddenElements.length} fixed/sticky elements`);
+
+    hiddenElements.forEach(({ element, originalPosition, originalDisplay }) => {
+      // Restore original values
+      if (originalPosition) {
+        element.style.position = originalPosition;
+      } else {
+        element.style.position = '';
+      }
+
+      if (originalDisplay) {
+        element.style.display = originalDisplay;
+      } else {
+        element.style.display = '';
+      }
+    });
+
+    console.log('[ElementCapturer] Fixed/sticky elements restored');
+  }
+
+  /**
    * Scrolls element into view ensuring it's fully visible
    * @param {HTMLElement} element - The element to scroll into view
    */
@@ -224,28 +292,43 @@ class ElementCapturer {
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
 
-    // Request visible tab screenshot from background
-    const response = await Messaging.sendToBackground({
-      action: 'captureVisibleTab',
-      rect: {
-        x: rect.left + scrollX,
-        y: rect.top + scrollY,
-        width: rect.width,
-        height: rect.height,
-        left: rect.left,
-        top: rect.top,
-      },
-      devicePixelRatio: window.devicePixelRatio,
-      scrollX,
-      scrollY,
-    });
+    // Hide fixed/sticky elements for clean capture
+    const hiddenFixedElements = this.hideFixedElements();
+    await this.waitForDOMUpdate();
 
-    if (!response.success) {
-      throw new Error(response.error || 'Capture failed');
+    try {
+      // Request visible tab screenshot from background
+      const response = await Messaging.sendToBackground({
+        action: 'captureVisibleTab',
+        rect: {
+          x: rect.left + scrollX,
+          y: rect.top + scrollY,
+          width: rect.width,
+          height: rect.height,
+          left: rect.left,
+          top: rect.top,
+        },
+        devicePixelRatio: window.devicePixelRatio,
+        scrollX,
+        scrollY,
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || 'Capture failed');
+      }
+
+      // Crop to element bounds
+      const result = await this.cropImage(response.imageData, rect, window.devicePixelRatio);
+
+      // Restore fixed elements
+      this.restoreFixedElements(hiddenFixedElements);
+
+      return result;
+    } catch (error) {
+      // Restore fixed elements on error
+      this.restoreFixedElements(hiddenFixedElements);
+      throw error;
     }
-
-    // Crop to element bounds
-    return await this.cropImage(response.imageData, rect, window.devicePixelRatio);
   }
 
   /**
@@ -279,6 +362,12 @@ class ElementCapturer {
 
     // Get element's absolute position
     const elementAbsoluteTop = initialRect.top + originalScrollY;
+
+    // IMPORTANT: Hide all fixed/sticky elements to prevent floating UI duplication
+    const hiddenFixedElements = this.hideFixedElements();
+
+    // Wait for DOM to update after hiding elements
+    await this.waitForDOMUpdate();
 
     // Create canvas for final stitched image
     const finalCanvas = document.createElement('canvas');
@@ -349,14 +438,20 @@ class ElementCapturer {
 
       await this.waitForDOMUpdate();
 
+      // Restore fixed/sticky elements
+      this.restoreFixedElements(hiddenFixedElements);
+
       console.log('[ElementCapturer] Stitching complete');
       return finalCanvas.toDataURL('image/png');
     } catch (error) {
-      // Restore scroll on error
+      // Restore scroll and fixed elements on error
       window.scrollTo({
         top: originalScrollY,
         behavior: 'instant',
       });
+
+      this.restoreFixedElements(hiddenFixedElements);
+
       throw error;
     }
   }
