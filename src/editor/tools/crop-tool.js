@@ -427,7 +427,7 @@ class CropTool extends BaseTool {
     `;
   }
 
-  setupOptions() {
+  attachOptionListeners() {
     const applyBtn = document.getElementById('applyEdgeCrop');
     if (applyBtn) {
       applyBtn.addEventListener('click', () => this.applyEdgeCrop());
