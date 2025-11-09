@@ -8,10 +8,12 @@ class ElementSelector {
     this.isActive = false;
     this.highlighter = new ElementHighlighter();
     this.selectedElement = null;
+    this.originalElement = null; // Store the originally clicked element
     this.hoveredElement = null;
     this.sliderContainer = null;
     this.currentDepth = 0;
     this.maxDepth = 0;
+    this.instructionsTimer = null; // Timer for auto-hiding instructions
 
     // Bound event handlers for proper cleanup
     this.handleMouseMove = this.handleMouseMove.bind(this);
@@ -43,6 +45,7 @@ class ElementSelector {
     this.removeSlider();
     this.hideInstructions();
     this.selectedElement = null;
+    this.originalElement = null;
     this.hoveredElement = null;
   }
 
@@ -158,6 +161,7 @@ class ElementSelector {
    * @param {HTMLElement} element - The element to select
    */
   selectElement(element) {
+    this.originalElement = element; // Store the originally clicked element
     this.selectedElement = element;
     this.currentDepth = DOMTraversal.getElementDepth(element);
     this.maxDepth = this.currentDepth;
@@ -195,11 +199,8 @@ class ElementSelector {
    * Updates the selected element based on current depth
    */
   updateSelectedElement() {
-    const originalElement = DOMTraversal.getElementAtDepth(
-      this.selectedElement,
-      this.maxDepth
-    );
-    const newElement = DOMTraversal.getElementAtDepth(originalElement, this.currentDepth);
+    // Always traverse from the original clicked element
+    const newElement = DOMTraversal.getElementAtDepth(this.originalElement, this.currentDepth);
 
     if (newElement && newElement !== this.selectedElement) {
       this.selectedElement = newElement;
@@ -215,8 +216,6 @@ class ElementSelector {
   showSlider() {
     this.removeSlider();
 
-    const depthValue = this.maxDepth - this.currentDepth;
-
     this.sliderContainer = DOMUtils.createElement('div', {
       className: 'element-selector__slider',
       html: `
@@ -227,7 +226,7 @@ class ElementSelector {
               type="range"
               min="0"
               max="${this.maxDepth}"
-              value="${depthValue}"
+              value="${this.currentDepth}"
               class="element-selector__slider-input"
             />
             <span>Child</span>
@@ -262,15 +261,29 @@ class ElementSelector {
     const captureBtn = this.sliderContainer.querySelector('.element-selector__btn--capture');
     const cancelBtn = this.sliderContainer.querySelector('.element-selector__btn--cancel');
 
-    slider?.addEventListener('input', (e) => {
-      const depthValue = parseInt(e.target.value, 10);
-      this.currentDepth = this.maxDepth - depthValue;
-      this.updateSelectedElement();
-      this.updateSliderInfo();
-    });
+    if (slider) {
+      slider.addEventListener('input', (e) => {
+        this.currentDepth = parseInt(e.target.value, 10);
+        this.updateSelectedElement();
+        this.updateSliderInfo();
+      });
+    }
 
-    captureBtn?.addEventListener('click', () => this.captureElement());
-    cancelBtn?.addEventListener('click', () => this.deselectElement());
+    if (captureBtn) {
+      captureBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.captureElement();
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.deselectElement();
+      });
+    }
   }
 
   /**
@@ -281,7 +294,7 @@ class ElementSelector {
 
     const slider = this.sliderContainer.querySelector('.element-selector__slider-input');
     if (slider) {
-      slider.value = this.maxDepth - this.currentDepth;
+      slider.value = this.currentDepth;
     }
 
     this.updateSliderInfo();
@@ -321,6 +334,12 @@ class ElementSelector {
    * Shows instruction overlay
    */
   showInstructions() {
+    // Clear any existing timer
+    if (this.instructionsTimer) {
+      clearTimeout(this.instructionsTimer);
+      this.instructionsTimer = null;
+    }
+
     const instructions = DOMUtils.createElement('div', {
       id: 'element-selector-instructions',
       className: 'element-selector__instructions',
@@ -336,7 +355,7 @@ class ElementSelector {
     document.body.appendChild(instructions);
 
     // Auto-hide after 3 seconds
-    setTimeout(() => {
+    this.instructionsTimer = setTimeout(() => {
       this.hideInstructions();
     }, 3000);
   }
@@ -345,6 +364,12 @@ class ElementSelector {
    * Hides instruction overlay
    */
   hideInstructions() {
+    // Clear the timer
+    if (this.instructionsTimer) {
+      clearTimeout(this.instructionsTimer);
+      this.instructionsTimer = null;
+    }
+
     const instructions = document.getElementById('element-selector-instructions');
     if (instructions) {
       DOMUtils.removeElement(instructions);
