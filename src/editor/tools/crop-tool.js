@@ -127,7 +127,10 @@ class CropTool extends BaseTool {
     this.edgeCropMode = true;
     this.edgeCropRect = { top: 0, left: 0, right: 0, bottom: 0 };
     this.savedImageData = this.canvasManager.getImageData();
-    this.drawEdgeCropOverlay();
+
+    // Explicitly clear any overlay remnants by redrawing clean image
+    this.canvasManager.putImageData(this.savedImageData);
+
     console.log('[CropTool] Crop applied and saved to history');
   }
 
@@ -397,10 +400,12 @@ class CropTool extends BaseTool {
     // Save to history
     this.historyManager.saveState();
 
-    // Reset edge crop
+    // Reset edge crop state and ensure clean canvas
     this.edgeCropRect = { top: 0, left: 0, right: 0, bottom: 0 };
     this.savedImageData = this.canvasManager.getImageData();
-    this.drawEdgeCropOverlay();
+
+    // Explicitly clear any overlay remnants by redrawing clean image
+    this.canvasManager.putImageData(this.savedImageData);
 
     console.log('[CropTool] Edge crop applied');
   }
