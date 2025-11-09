@@ -393,6 +393,10 @@ class ElementCapturer {
     const finalCtx = finalCanvas.getContext('2d');
 
     try {
+      // Track actual scroll positions and cumulative capture for accurate stitching
+      let firstCaptureScrollY = originalScrollY; // Start from current scroll
+      let cumulativeCapturedHeight = 0; // Track how much we've captured so far
+
       // Capture each section
       for (let i = 0; i < numCaptures; i++) {
         // IMPORTANT: Add delay between captures to respect Chrome's rate limit
@@ -402,36 +406,45 @@ class ElementCapturer {
           await this.delay(550); // 550ms delay = ~1.8 calls/sec (safely under 2/sec limit)
         }
 
-        // Calculate scroll position for this capture
-        const scrollOffset = i * captureHeight;
-        let targetScrollY = elementAbsoluteTop + scrollOffset;
+        let targetScrollY;
 
-        // IMPORTANT: Clamp scroll position for last capture to avoid scrolling past element
-        // Maximum scroll is when element's bottom is at viewport's bottom
-        const elementAbsoluteBottom = elementAbsoluteTop + elementHeight;
-        const maxScrollY = Math.max(0, elementAbsoluteBottom - viewportHeight);
+        if (i === 0) {
+          // IMPORTANT: First capture uses current scroll position (no scrolling)
+          targetScrollY = originalScrollY;
+          firstCaptureScrollY = originalScrollY;
+          console.log(`[ElementCapturer] First capture at current scroll: ${targetScrollY}`);
+        } else {
+          // Subsequent captures: scroll incrementally from first capture position
+          const scrollOffset = i * captureHeight;
+          targetScrollY = firstCaptureScrollY + scrollOffset;
 
-        const originalTargetScrollY = targetScrollY;
+          // IMPORTANT: Clamp scroll position to avoid scrolling past element
+          // Maximum scroll is when element's bottom is at viewport's bottom
+          const elementAbsoluteBottom = elementAbsoluteTop + elementHeight;
+          const maxScrollY = Math.max(0, elementAbsoluteBottom - viewportHeight);
 
-        // Don't scroll past the element's bottom
-        targetScrollY = Math.min(targetScrollY, maxScrollY);
+          const originalTargetScrollY = targetScrollY;
 
-        // Also ensure we don't scroll before the element starts
-        targetScrollY = Math.max(targetScrollY, elementAbsoluteTop);
+          // Don't scroll past the element's bottom
+          targetScrollY = Math.min(targetScrollY, maxScrollY);
 
-        if (targetScrollY !== originalTargetScrollY) {
-          console.log(
-            `[ElementCapturer] Clamped scroll from ${originalTargetScrollY} to ${targetScrollY} (max: ${maxScrollY})`
-          );
+          // Also ensure we don't scroll before the element starts
+          targetScrollY = Math.max(targetScrollY, elementAbsoluteTop);
+
+          if (targetScrollY !== originalTargetScrollY) {
+            console.log(
+              `[ElementCapturer] Clamped scroll from ${originalTargetScrollY} to ${targetScrollY} (max: ${maxScrollY})`
+            );
+          }
+
+          // Scroll to position
+          window.scrollTo({
+            top: targetScrollY,
+            behavior: 'instant',
+          });
+
+          await this.waitForDOMUpdate();
         }
-
-        // Scroll to position
-        window.scrollTo({
-          top: targetScrollY,
-          behavior: 'instant',
-        });
-
-        await this.waitForDOMUpdate();
 
         // Get updated rect after scroll
         const currentRect = element.getBoundingClientRect();
@@ -459,8 +472,12 @@ class ElementCapturer {
         const visibleTop = Math.max(0, currentRect.top);
         const visibleHeight = Math.min(currentRect.height, viewportHeight - visibleTop);
 
-        // Calculate destination position in final canvas
-        const destY = scrollOffset;
+        // Calculate destination Y based on cumulative height captured
+        const destY = cumulativeCapturedHeight;
+
+        console.log(
+          `[ElementCapturer] Stitching section ${i + 1}: destY=${destY}, visibleTop=${visibleTop}, visibleHeight=${visibleHeight}`
+        );
 
         // Draw this section onto final canvas
         finalCtx.drawImage(
@@ -475,7 +492,10 @@ class ElementCapturer {
           Math.round(visibleHeight * dpr) // dest height
         );
 
-        console.log(`[ElementCapturer] Section ${i + 1} stitched`);
+        // Update cumulative height for next section
+        cumulativeCapturedHeight += visibleHeight;
+
+        console.log(`[ElementCapturer] Section ${i + 1} stitched, cumulative height: ${cumulativeCapturedHeight}`);
       }
 
       // Restore original scroll position
