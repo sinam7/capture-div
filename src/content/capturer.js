@@ -425,13 +425,17 @@ class ElementCapturer {
         window.scrollTo({ top: scrollY, behavior: 'instant' });
         await this.waitForDOMUpdate();
 
-        // [NEW] After each scroll, check for newly appeared sticky elements
-        // Some elements become sticky only after scrolling past certain point
-        const newlyHiddenElements = this.hideAllFixedStickyElements();
-        allHiddenElements.push(...newlyHiddenElements);
-        await this.waitForDOMUpdate();
-
-        console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}, scrollY=${scrollY}, capturedHeight=${capturedHeight}, hidden ${newlyHiddenElements.length} sticky elements`);
+        // [NEW] Hide sticky elements starting from SECOND capture
+        // First capture shows sticky elements as they naturally appear
+        // Subsequent captures hide them to prevent duplication
+        if (i > 0) {
+          const newlyHiddenElements = this.hideAllFixedStickyElements();
+          allHiddenElements.push(...newlyHiddenElements);
+          await this.waitForDOMUpdate();
+          console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}, scrollY=${scrollY}, capturedHeight=${capturedHeight}, hidden ${newlyHiddenElements.length} sticky elements`);
+        } else {
+          console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures} (first capture - keeping sticky visible), scrollY=${scrollY}, capturedHeight=${capturedHeight}`);
+        }
 
         // Update progress indicator
         if (window.elementSelector) {
