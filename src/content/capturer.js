@@ -279,9 +279,7 @@ class ElementCapturer {
         // Important: Don't offset by scroll, html2canvas handles this
         scrollY: 0,
         scrollX: 0,
-        // Capture the element at its current position
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
+        // Let html2canvas calculate actual content size automatically (without CSS computed height)
         // Ignore certain elements
         ignoreElements: (el) => {
           // Ignore our UI overlays
