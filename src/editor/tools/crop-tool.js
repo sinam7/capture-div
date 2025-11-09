@@ -48,14 +48,17 @@ class CropTool extends BaseTool {
 
       if (this.draggedHandle) {
         console.log('[CropTool] Dragging handle:', this.draggedHandle);
-        this.savedImageData = this.canvasManager.getImageData();
+        // savedImageData already contains clean image from activate()
+        // Clear overlay before starting drag
+        this.canvasManager.putImageData(this.savedImageData);
         return;
       }
     }
 
     // If not dragging a handle, switch to area selection mode
     this.edgeCropMode = false;
-    this.savedImageData = this.canvasManager.getImageData();
+    // Clear edge overlay before starting area selection
+    this.canvasManager.putImageData(this.savedImageData);
   }
 
   onDrawMove(x, y) {
