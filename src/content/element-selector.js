@@ -357,9 +357,10 @@ class ElementSelector {
   async captureElement() {
     if (!this.selectedElement) return;
 
+    const captureBtn = this.sliderContainer?.querySelector('.element-selector__btn--capture');
+
     try {
       // Show loading state
-      const captureBtn = this.sliderContainer?.querySelector('.element-selector__btn--capture');
       if (captureBtn) {
         captureBtn.textContent = '⏳ Capturing...';
         captureBtn.disabled = true;
@@ -371,14 +372,15 @@ class ElementSelector {
         this.sliderContainer.style.display = 'none';
       }
 
-      // Send message to background script to initiate capture
+      // Capture the element using the capturer
+      const imageData = await ElementCapturer.capture(this.selectedElement);
+
+      // Store the image and open editor
       await Messaging.sendToBackground({
-        action: 'captureElement',
-        elementSelector: DOMUtils.getElementSelector(this.selectedElement),
+        action: 'openEditor',
+        imageData,
       });
 
-      // Will be handled by background script which will use html2canvas
-      // For now, we'll show a success message
       this.showNotification('Screenshot captured! Opening editor...');
 
       // Clean up

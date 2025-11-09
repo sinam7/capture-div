@@ -1,0 +1,176 @@
+/**
+ * Popup UI Styles
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  color: #333;
+  background: #f8f9fa;
+}
+
+.popup-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+/* Header */
+.popup-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  text-align: center;
+}
+
+.popup-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Main content */
+.popup-main {
+  flex: 1;
+  padding: 16px;
+}
+
+.popup-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.popup-actions {
+  margin-bottom: 20px;
+}
+
+.popup-btn {
+  width: 100%;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.popup-btn--primary {
+  background: #4285f4;
+  color: white;
+}
+
+.popup-btn--primary:hover {
+  background: #3367d6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+}
+
+.popup-btn--primary:active {
+  transform: translateY(0);
+}
+
+.popup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Instructions */
+.popup-instructions,
+.popup-shortcuts {
+  margin-bottom: 16px;
+}
+
+.popup-instructions h3,
+.popup-shortcuts h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.popup-instructions ol {
+  padding-left: 20px;
+}
+
+.popup-instructions li {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.popup-shortcuts ul {
+  list-style: none;
+  padding: 0;
+}
+
+.popup-shortcuts li {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+kbd {
+  background: #f1f3f4;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 11px;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Footer */
+.popup-footer {
+  background: #f1f3f4;
+  padding: 8px 16px;
+  text-align: center;
+  border-top: 1px solid #e0e0e0;
+}
+
+.popup-version {
+  font-size: 11px;
+  color: #999;
+}
+
+/* Status message */
+.popup-status {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.popup-status--success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.popup-status--error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.popup-status--info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}

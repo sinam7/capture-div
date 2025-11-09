@@ -28,8 +28,10 @@
       "matches": ["<all_urls>"],
       "js": [
         "src/utils/dom-utils.js",
+        "src/utils/messaging.js",
         "src/content/highlighter.js",
         "src/content/dom-traversal.js",
+        "src/content/capturer.js",
         "src/content/element-selector.js"
       ],
       "css": ["src/styles/selector.css"],

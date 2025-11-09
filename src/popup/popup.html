@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Element Screenshot Editor</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup-container">
+      <header class="popup-header">
+        <h1 class="popup-title">
+          📸 Element Screenshot
+        </h1>
+      </header>
+
+      <main class="popup-main">
+        <div class="popup-description">
+          Capture screenshots of specific elements on the page
+        </div>
+
+        <div class="popup-actions">
+          <button id="startSelectionBtn" class="popup-btn popup-btn--primary">
+            Start Selection
+          </button>
+        </div>
+
+        <div class="popup-instructions">
+          <h3>How to use:</h3>
+          <ol>
+            <li>Click "Start Selection"</li>
+            <li>Hover over elements to highlight them</li>
+            <li>Click an element to select it</li>
+            <li>Use the slider to adjust selection</li>
+            <li>Click "Capture" to take screenshot</li>
+          </ol>
+        </div>
+
+        <div class="popup-shortcuts">
+          <h3>Keyboard shortcuts:</h3>
+          <ul>
+            <li><kbd>ESC</kbd> - Cancel selection</li>
+            <li><kbd>↑</kbd> / <kbd>←</kbd> - Select parent</li>
+            <li><kbd>↓</kbd> / <kbd>→</kbd> - Select child</li>
+          </ul>
+        </div>
+      </main>
+
+      <footer class="popup-footer">
+        <div class="popup-version">v1.0.0</div>
+      </footer>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
