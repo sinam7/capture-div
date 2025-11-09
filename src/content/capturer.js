@@ -71,11 +71,12 @@ class ElementCapturer {
   }
 
   /**
-   * Hides all fixed/sticky positioned elements (floating UI)
+   * Hides all fixed/sticky positioned elements (floating UI) except those inside target
    * Returns array of hidden elements for later restoration
+   * @param {HTMLElement} targetElement - The element being captured (to exclude its descendants)
    * @returns {Array} Array of {element, originalPosition, originalDisplay}
    */
-  static hideFixedElements() {
+  static hideFixedElements(targetElement) {
     console.log('[ElementCapturer] Hiding fixed/sticky positioned elements');
 
     const hiddenElements = [];
@@ -87,8 +88,15 @@ class ElementCapturer {
 
       // Check if element is fixed or sticky positioned
       if (position === 'fixed' || position === 'sticky') {
-        // Skip if it's part of the target element we're capturing
-        // (we'll handle this by checking ancestry later)
+        // IMPORTANT: Skip if it's part of the target element we're capturing
+        // We only want to hide floating UI elements, not fixed content inside the target
+        if (targetElement && targetElement.contains(element)) {
+          console.log('[ElementCapturer] Skipping fixed/sticky element inside target:', {
+            tag: element.tagName,
+            class: element.className,
+          });
+          return; // Skip this element
+        }
 
         // Store original values
         hiddenElements.push({
@@ -300,8 +308,8 @@ class ElementCapturer {
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
 
-    // Hide fixed/sticky elements for clean capture
-    const hiddenFixedElements = this.hideFixedElements();
+    // Hide fixed/sticky elements for clean capture (except those inside target)
+    const hiddenFixedElements = this.hideFixedElements(element);
     await this.waitForDOMUpdate();
 
     try {
@@ -372,7 +380,8 @@ class ElementCapturer {
     const elementAbsoluteTop = initialRect.top + originalScrollY;
 
     // IMPORTANT: Hide all fixed/sticky elements to prevent floating UI duplication
-    const hiddenFixedElements = this.hideFixedElements();
+    // Pass the target element so we don't hide fixed elements that are part of its content
+    const hiddenFixedElements = this.hideFixedElements(element);
 
     // Wait for DOM to update after hiding elements
     await this.waitForDOMUpdate();
@@ -395,7 +404,26 @@ class ElementCapturer {
 
         // Calculate scroll position for this capture
         const scrollOffset = i * captureHeight;
-        const targetScrollY = elementAbsoluteTop + scrollOffset;
+        let targetScrollY = elementAbsoluteTop + scrollOffset;
+
+        // IMPORTANT: Clamp scroll position for last capture to avoid scrolling past element
+        // Maximum scroll is when element's bottom is at viewport's bottom
+        const elementAbsoluteBottom = elementAbsoluteTop + elementHeight;
+        const maxScrollY = Math.max(0, elementAbsoluteBottom - viewportHeight);
+
+        const originalTargetScrollY = targetScrollY;
+
+        // Don't scroll past the element's bottom
+        targetScrollY = Math.min(targetScrollY, maxScrollY);
+
+        // Also ensure we don't scroll before the element starts
+        targetScrollY = Math.max(targetScrollY, elementAbsoluteTop);
+
+        if (targetScrollY !== originalTargetScrollY) {
+          console.log(
+            `[ElementCapturer] Clamped scroll from ${originalTargetScrollY} to ${targetScrollY} (max: ${maxScrollY})`
+          );
+        }
 
         // Scroll to position
         window.scrollTo({
