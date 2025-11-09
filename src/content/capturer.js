@@ -282,6 +282,11 @@ class ElementCapturer {
         // Let html2canvas calculate actual content size automatically (without CSS computed height)
         // Ignore certain elements
         ignoreElements: (el) => {
+          // Ignore all <script> tags to prevent CSP violations
+          if (el.tagName === 'SCRIPT') {
+            return true;
+          }
+
           // Ignore our UI overlays
           return (
             el.classList.contains('element-selector__highlight') ||
