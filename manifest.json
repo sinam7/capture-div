@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Element Screenshot Editor",
+  "name": "Capture Div - Capture Element and Edit",
   "version": "1.0.0",
   "description": "Capture screenshots of specific web elements and edit them with advanced tools",
   "permissions": [
