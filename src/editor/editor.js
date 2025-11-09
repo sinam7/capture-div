@@ -182,6 +182,16 @@ class ImageEditor {
     // Apply transform to canvas
     this.canvas.style.transform = `scale(${this.zoom})`;
 
+    // Adjust canvas wrapper to enable proper scrolling
+    // The canvas takes up space based on its actual size, but visually scales
+    // We need to ensure the wrapper can scroll when canvas is larger than viewport
+    const { width, height } = this.canvasManager.getDimensions();
+
+    // Set min-width/min-height on wrapper to enable scrolling for large canvases
+    // This ensures scroll bars appear when scaled canvas exceeds viewport
+    this.canvasWrapper.style.minWidth = 'auto';
+    this.canvasWrapper.style.minHeight = 'auto';
+
     // Update zoom level display
     const zoomLevel = document.getElementById('zoomLevel');
     if (zoomLevel) {

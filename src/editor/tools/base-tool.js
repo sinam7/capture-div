@@ -71,13 +71,44 @@ class BaseTool {
   }
 
   /**
+   * Converts screen coordinates to canvas coordinates accounting for zoom
+   * @param {number} screenX - X coordinate relative to canvas on screen
+   * @param {number} screenY - Y coordinate relative to canvas on screen
+   * @returns {Object} Canvas coordinates {x, y}
+   */
+  screenToCanvasCoords(screenX, screenY) {
+    const zoom = this.editor.zoom || 1.0;
+
+    // Get actual canvas dimensions
+    const canvasWidth = this.canvas.width;
+    const canvasHeight = this.canvas.height;
+
+    // Get displayed canvas dimensions (affected by zoom)
+    const displayedWidth = canvasWidth * zoom;
+    const displayedHeight = canvasHeight * zoom;
+
+    // Convert screen coordinates to canvas coordinates
+    // Screen coords are relative to the zoomed (displayed) canvas
+    // We need to convert to actual canvas pixel coordinates
+    const canvasX = screenX / zoom;
+    const canvasY = screenY / zoom;
+
+    return { x: canvasX, y: canvasY };
+  }
+
+  /**
    * Handles mouse down event
    * Override this in subclasses
    */
   handleMouseDown = (e) => {
     const rect = this.canvas.getBoundingClientRect();
-    this.startX = e.clientX - rect.left;
-    this.startY = e.clientY - rect.top;
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+
+    // Convert to canvas coordinates accounting for zoom
+    const coords = this.screenToCanvasCoords(screenX, screenY);
+    this.startX = coords.x;
+    this.startY = coords.y;
     this.currentX = this.startX;
     this.currentY = this.startY;
     this.isDrawing = true;
@@ -96,8 +127,13 @@ class BaseTool {
     if (!this.isDrawing) return;
 
     const rect = this.canvas.getBoundingClientRect();
-    this.currentX = e.clientX - rect.left;
-    this.currentY = e.clientY - rect.top;
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+
+    // Convert to canvas coordinates accounting for zoom
+    const coords = this.screenToCanvasCoords(screenX, screenY);
+    this.currentX = coords.x;
+    this.currentY = coords.y;
 
     this.onDrawMove(this.currentX, this.currentY);
   };
@@ -109,9 +145,13 @@ class BaseTool {
     if (!this.isDrawing) return;
 
     const rect = this.canvas.getBoundingClientRect();
-    // Calculate position relative to canvas
-    this.currentX = e.clientX - rect.left;
-    this.currentY = e.clientY - rect.top;
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+
+    // Convert to canvas coordinates accounting for zoom
+    const coords = this.screenToCanvasCoords(screenX, screenY);
+    this.currentX = coords.x;
+    this.currentY = coords.y;
 
     // Note: coordinates may be outside canvas bounds
     // Individual tools can clamp them in onDrawMove if needed
@@ -126,8 +166,13 @@ class BaseTool {
     if (!this.isDrawing) return;
 
     const rect = this.canvas.getBoundingClientRect();
-    this.currentX = e.clientX - rect.left;
-    this.currentY = e.clientY - rect.top;
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+
+    // Convert to canvas coordinates accounting for zoom
+    const coords = this.screenToCanvasCoords(screenX, screenY);
+    this.currentX = coords.x;
+    this.currentY = coords.y;
     this.isDrawing = false;
 
     // Remove document listeners
@@ -143,8 +188,13 @@ class BaseTool {
     if (!this.isDrawing) return;
 
     const rect = this.canvas.getBoundingClientRect();
-    this.currentX = e.clientX - rect.left;
-    this.currentY = e.clientY - rect.top;
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+
+    // Convert to canvas coordinates accounting for zoom
+    const coords = this.screenToCanvasCoords(screenX, screenY);
+    this.currentX = coords.x;
+    this.currentY = coords.y;
     this.isDrawing = false;
 
     // Remove document listeners
