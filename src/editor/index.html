@@ -87,6 +87,39 @@
         <div class="editor-toolbar__spacer"></div>
 
         <div class="editor-toolbar__section">
+          <button
+            class="editor-toolbar__btn"
+            data-action="zoom-out"
+            title="Zoom Out (-)"
+            id="zoomOutBtn"
+          >
+            <span class="icon">−</span>
+            <span class="label">Zoom Out</span>
+          </button>
+          <span id="zoomLevel" class="editor-toolbar__zoom-level">100%</span>
+          <button
+            class="editor-toolbar__btn"
+            data-action="zoom-in"
+            title="Zoom In (+)"
+            id="zoomInBtn"
+          >
+            <span class="icon">+</span>
+            <span class="label">Zoom In</span>
+          </button>
+          <button
+            class="editor-toolbar__btn"
+            data-action="fit-screen"
+            title="Fit to Screen (F)"
+            id="fitScreenBtn"
+          >
+            <span class="icon">⛶</span>
+            <span class="label">Fit</span>
+          </button>
+        </div>
+
+        <div class="editor-toolbar__divider"></div>
+
+        <div class="editor-toolbar__section">
           <input type="color" id="colorPicker" value="#ff0000" title="Color" />
           <input
             type="range"
@@ -101,7 +134,7 @@
       </div>
 
       <!-- Canvas Area -->
-      <div class="editor-canvas-wrapper">
+      <div class="editor-canvas-wrapper" id="canvasWrapper">
         <canvas id="editorCanvas" class="editor-canvas"></canvas>
       </div>
 

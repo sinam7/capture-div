@@ -5,6 +5,7 @@
 class ImageEditor {
   constructor() {
     this.canvas = document.getElementById('editorCanvas');
+    this.canvasWrapper = document.getElementById('canvasWrapper');
     this.canvasManager = new CanvasManager(this.canvas);
     this.historyManager = new HistoryManager(this.canvasManager);
 
@@ -20,6 +21,13 @@ class ImageEditor {
     };
 
     this.currentTool = null;
+
+    // Zoom properties
+    this.zoom = 1.0; // 100%
+    this.minZoom = 0.1; // 10%
+    this.maxZoom = 5.0; // 500%
+    this.zoomStep = 0.1; // 10% per step
+
     this.init();
   }
 
@@ -46,8 +54,12 @@ class ImageEditor {
       // Set up UI
       this.setupToolbar();
       this.setupActions();
+      this.setupZoom();
       this.setupKeyboardShortcuts();
       this.updateImageInfo();
+
+      // Auto-fit large images to screen
+      this.fitToScreen();
 
       this.hideLoading();
       this.showNotification('Image loaded successfully!', 'success');
@@ -103,6 +115,83 @@ class ImageEditor {
   }
 
   /**
+   * Sets up zoom controls
+   */
+  setupZoom() {
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const fitScreenBtn = document.getElementById('fitScreenBtn');
+
+    zoomInBtn?.addEventListener('click', () => this.zoomIn());
+    zoomOutBtn?.addEventListener('click', () => this.zoomOut());
+    fitScreenBtn?.addEventListener('click', () => this.fitToScreen());
+
+    // Mouse wheel zoom
+    this.canvasWrapper.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          this.zoomIn();
+        } else {
+          this.zoomOut();
+        }
+      }
+    });
+  }
+
+  /**
+   * Zooms in
+   */
+  zoomIn() {
+    this.setZoom(Math.min(this.zoom + this.zoomStep, this.maxZoom));
+  }
+
+  /**
+   * Zooms out
+   */
+  zoomOut() {
+    this.setZoom(Math.max(this.zoom - this.zoomStep, this.minZoom));
+  }
+
+  /**
+   * Fits canvas to screen
+   */
+  fitToScreen() {
+    const { width, height } = this.canvasManager.getDimensions();
+    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+
+    // Calculate available space (subtract padding)
+    const availableWidth = wrapperRect.width - 40; // 20px padding on each side
+    const availableHeight = wrapperRect.height - 40;
+
+    // Calculate zoom to fit
+    const zoomX = availableWidth / width;
+    const zoomY = availableHeight / height;
+    const fitZoom = Math.min(zoomX, zoomY, 1.0); // Don't zoom beyond 100% for fit
+
+    this.setZoom(fitZoom);
+  }
+
+  /**
+   * Sets zoom level
+   * @param {number} newZoom - New zoom level
+   */
+  setZoom(newZoom) {
+    this.zoom = Math.max(this.minZoom, Math.min(newZoom, this.maxZoom));
+
+    // Apply transform to canvas
+    this.canvas.style.transform = `scale(${this.zoom})`;
+
+    // Update zoom level display
+    const zoomLevel = document.getElementById('zoomLevel');
+    if (zoomLevel) {
+      zoomLevel.textContent = `${Math.round(this.zoom * 100)}%`;
+    }
+
+    console.log('[Editor] Zoom set to:', this.zoom);
+  }
+
+  /**
    * Sets up keyboard shortcuts
    */
   setupKeyboardShortcuts() {
@@ -122,6 +211,22 @@ class ImageEditor {
       // ESC - Deselect tool
       if (e.key === 'Escape') {
         this.deactivateTool();
+      }
+
+      // Zoom shortcuts
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        this.zoomIn();
+      }
+
+      if (e.key === '-' || e.key === '_') {
+        e.preventDefault();
+        this.zoomOut();
+      }
+
+      if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        this.fitToScreen();
       }
 
       // Tool shortcuts
