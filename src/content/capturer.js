@@ -253,24 +253,55 @@ class ElementCapturer {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
-          // Set canvas size to element size
-          canvas.width = Math.round(rect.width * dpr);
-          canvas.height = Math.round(rect.height * dpr);
+          // Calculate viewport dimensions from captured image
+          const viewportWidth = img.width / dpr;
+          const viewportHeight = img.height / dpr;
+
+          console.log('[ElementCapturer] Viewport dimensions:', {
+            viewportWidth,
+            viewportHeight,
+            imageWidth: img.width,
+            imageHeight: img.height,
+          });
+
+          // Clamp crop area to what's actually visible in the captured viewport
+          // The element rect is relative to viewport top-left (0, 0)
+          const sourceX = Math.max(0, rect.left);
+          const sourceY = Math.max(0, rect.top);
+          const sourceWidth = Math.min(rect.width, viewportWidth - sourceX);
+          const sourceHeight = Math.min(rect.height, viewportHeight - sourceY);
+
+          // If element extends beyond viewport, warn user
+          if (
+            sourceWidth < rect.width ||
+            sourceHeight < rect.height ||
+            rect.left < 0 ||
+            rect.top < 0
+          ) {
+            console.warn('[ElementCapturer] Element extends beyond viewport, cropping to visible area only', {
+              requested: { width: rect.width, height: rect.height },
+              actual: { width: sourceWidth, height: sourceHeight },
+            });
+          }
+
+          // Set canvas size to actual crop size
+          canvas.width = Math.round(sourceWidth * dpr);
+          canvas.height = Math.round(sourceHeight * dpr);
 
           // Scale context for device pixel ratio
           ctx.scale(dpr, dpr);
 
-          // Draw the cropped portion
+          // Draw the cropped portion from the captured viewport image
           ctx.drawImage(
             img,
-            Math.round(rect.left * dpr),
-            Math.round(rect.top * dpr),
-            Math.round(rect.width * dpr),
-            Math.round(rect.height * dpr),
-            0,
-            0,
-            rect.width,
-            rect.height
+            Math.round(sourceX * dpr), // source x in captured image
+            Math.round(sourceY * dpr), // source y in captured image
+            Math.round(sourceWidth * dpr), // source width in captured image
+            Math.round(sourceHeight * dpr), // source height in captured image
+            0, // destination x
+            0, // destination y
+            sourceWidth, // destination width
+            sourceHeight // destination height
           );
 
           const croppedData = canvas.toDataURL('image/png');
