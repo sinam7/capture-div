@@ -407,9 +407,21 @@ class ElementCapturer {
 
       // 4. Capture loop
       for (let i = 0; i < numCaptures; i++) {
-        // [FIXED] Use capturedHeight instead of i*viewportHeight for accurate positioning
-        // This ensures we scroll to where the previous capture ended, not a fixed interval
-        const scrollY = elementAbsoluteTop + capturedHeight;
+        // Calculate remaining height before this capture
+        const remainingHeight = contentHeight - capturedHeight;
+
+        // [FIXED] For last capture with remaining < viewport, scroll to show element bottom
+        // This ensures the last section fills the viewport from bottom instead of top
+        let scrollY;
+        if (remainingHeight < viewportHeight && i === numCaptures - 1) {
+          // Last capture: align element bottom with viewport bottom
+          scrollY = elementAbsoluteTop + contentHeight - viewportHeight;
+          console.log(`[ElementCapturer] Last capture: scrolling to bottom, remainingHeight=${remainingHeight}`);
+        } else {
+          // Normal capture: continue from where previous capture ended
+          scrollY = elementAbsoluteTop + capturedHeight;
+        }
+
         window.scrollTo({ top: scrollY, behavior: 'instant' });
         await this.waitForDOMUpdate();
 
@@ -439,8 +451,17 @@ class ElementCapturer {
         const visibleHeight = visibleBottom - visibleTop;
 
         // Calculate how much we should actually capture (limited by remaining content)
-        const remainingHeight = contentHeight - capturedHeight;
+        // remainingHeight already calculated at loop start
         const captureHeight = Math.min(visibleHeight, remainingHeight);
+
+        // For last capture that was scrolled to bottom, adjust sourceY
+        let sourceY = visibleTop;
+        if (remainingHeight < viewportHeight && i === numCaptures - 1) {
+          // Element's bottom is aligned with viewport bottom
+          // Calculate where our capture section starts in viewport
+          sourceY = capturedHeight - (contentHeight - viewportHeight);
+          console.log(`[ElementCapturer] Last capture sourceY adjustment: ${sourceY} (capturedHeight=${capturedHeight}, contentHeight=${contentHeight})`);
+        }
 
         console.log('[ElementCapturer] Stitch section:', {
           section: i + 1,
@@ -449,14 +470,15 @@ class ElementCapturer {
           visibleHeight,
           remainingHeight,
           captureHeight,
-          capturedHeight
+          capturedHeight,
+          sourceY
         });
 
         // 6. Draw to canvas
         finalCtx.drawImage(
           img,
           Math.round(currentRect.left * dpr),    // source x
-          Math.round(visibleTop * dpr),          // source y (where element starts in viewport)
+          Math.round(sourceY * dpr),             // source y (adjusted for last capture)
           Math.round(elementWidth * dpr),        // source width
           Math.round(captureHeight * dpr),       // source height (actual visible height)
           0,                                     // dest x
