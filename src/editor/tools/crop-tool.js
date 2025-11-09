@@ -30,6 +30,10 @@ class CropTool extends BaseTool {
 
   deactivate() {
     super.deactivate();
+    // Clear the overlay by restoring clean image
+    if (this.savedImageData) {
+      this.canvasManager.putImageData(this.savedImageData);
+    }
     this.edgeCropMode = false;
     this.edgeCropRect = null;
     this.draggedHandle = null;
@@ -232,10 +236,16 @@ class CropTool extends BaseTool {
   drawEdgeCropOverlay() {
     this.canvasManager.putImageData(this.savedImageData);
 
+    const rect = this.edgeCropRect;
+
+    // Don't draw overlay if nothing is being cropped
+    if (rect.top === 0 && rect.left === 0 && rect.right === 0 && rect.bottom === 0) {
+      return;
+    }
+
     const ctx = this.canvas.getContext('2d');
     const w = this.canvas.width;
     const h = this.canvas.height;
-    const rect = this.edgeCropRect;
 
     ctx.save();
 
