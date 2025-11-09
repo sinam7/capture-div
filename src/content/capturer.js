@@ -125,12 +125,13 @@ class ElementCapturer {
    * Hides fixed/sticky positioned elements INSIDE target element
    * Called after first capture to prevent duplication in subsequent captures
    * @param {HTMLElement} targetElement - The element being captured
-   * @returns {Array} Array of {element, originalPosition, originalDisplay}
+   * @returns {Object} {elements: Array, totalHeight: number}
    */
   static hideFixedElementsInsideTarget(targetElement) {
     console.log('[ElementCapturer] Hiding fixed/sticky elements inside target');
 
     const hiddenElements = [];
+    let totalHeight = 0;
     const allElements = targetElement.querySelectorAll('*');
 
     allElements.forEach((element) => {
@@ -139,13 +140,20 @@ class ElementCapturer {
 
       // Check if element is fixed or sticky positioned
       if (position === 'fixed' || position === 'sticky') {
+        // Get element height before hiding
+        const rect = element.getBoundingClientRect();
+        const elementHeight = rect.height;
+
         // Store original values
         hiddenElements.push({
           element: element,
           originalPosition: element.style.position,
           originalDisplay: element.style.display,
           computedPosition: position,
+          height: elementHeight,
         });
+
+        totalHeight += elementHeight;
 
         // Hide the element
         element.style.display = 'none';
@@ -154,12 +162,13 @@ class ElementCapturer {
           tag: element.tagName,
           class: element.className,
           position: position,
+          height: elementHeight,
         });
       }
     });
 
-    console.log(`[ElementCapturer] Hidden ${hiddenElements.length} internal fixed/sticky elements`);
-    return hiddenElements;
+    console.log(`[ElementCapturer] Hidden ${hiddenElements.length} internal fixed/sticky elements, total height: ${totalHeight}px`);
+    return { elements: hiddenElements, totalHeight };
   }
 
   /**
@@ -413,7 +422,7 @@ class ElementCapturer {
     await this.delay(100);
 
     // Track fixed elements inside target (hidden after first capture)
-    let hiddenInternalFixedElements = [];
+    let hiddenInternalFixedElements = []; // Array format to match external fixed elements
 
     try {
       // STEP 1: Scroll to element's top to establish predictable starting point
@@ -445,9 +454,12 @@ class ElementCapturer {
       }
 
       // STEP 3: Hide internal sticky elements after first capture
+      let stickyHeight = 0;
       if (Math.ceil(initialRect.height / viewportHeight) > 1) {
         console.log('[ElementCapturer] Hiding internal fixed/sticky elements');
-        hiddenInternalFixedElements = this.hideFixedElementsInsideTarget(element);
+        const hideResult = this.hideFixedElementsInsideTarget(element);
+        hiddenInternalFixedElements = hideResult.elements;
+        stickyHeight = hideResult.totalHeight;
         await this.waitForDOMUpdate();
         await this.delay(100);
       }
@@ -459,8 +471,16 @@ class ElementCapturer {
       const elementAbsoluteTop = recalcRect.top + window.scrollY;
       const elementAbsoluteBottom = elementAbsoluteTop + elementHeight;
 
-      // Recalculate number of captures needed
-      const numCaptures = Math.ceil(elementHeight / viewportHeight);
+      // Calculate how much actual content was captured in first section (excluding sticky)
+      const firstVisibleTop = Math.max(0, firstRect.top);
+      const firstVisibleBottom = Math.min(viewportHeight, firstRect.bottom);
+      const firstVisibleHeight = firstVisibleBottom - firstVisibleTop;
+      const firstCaptureContentHeight = firstVisibleHeight - stickyHeight;
+
+      // Recalculate number of captures needed based on remaining content
+      const remainingContent = elementHeight - firstCaptureContentHeight;
+      const remainingCaptures = Math.max(0, Math.ceil(remainingContent / viewportHeight));
+      const numCaptures = 1 + remainingCaptures; // First capture + remaining
 
       console.log('[ElementCapturer] Recalculated stitching params:', {
         elementHeight,
@@ -470,28 +490,19 @@ class ElementCapturer {
         elementAbsoluteBottom,
         originalHeight: initialRect.height,
         heightChange: initialRect.height - elementHeight,
+        stickyHeight,
+        firstCaptureContentHeight,
+        remainingContent,
+        remainingCaptures,
       });
 
-      // IMPORTANT: Re-scroll to element's NEW top position after hiding sticky elements
-      // The element's position in document has changed, so we need to adjust
-      console.log('[ElementCapturer] Re-scrolling to new element top position:', elementAbsoluteTop);
-      window.scrollTo({
-        top: elementAbsoluteTop,
-        behavior: 'instant',
-      });
-      await this.waitForDOMUpdate();
-
-      // STEP 5: Create canvas with recalculated dimensions
+      // STEP 5: Create canvas with recalculated dimensions (include sticky in final image)
       const finalCanvas = document.createElement('canvas');
       finalCanvas.width = Math.round(elementWidth * dpr);
-      finalCanvas.height = Math.round(elementHeight * dpr);
+      finalCanvas.height = Math.round((elementHeight + stickyHeight) * dpr);
       const finalCtx = finalCanvas.getContext('2d');
 
-      // STEP 6: Draw first captured section
-      const firstVisibleTop = Math.max(0, firstRect.top);
-      const firstVisibleBottom = Math.min(viewportHeight, firstRect.bottom);
-      const firstVisibleHeight = firstVisibleBottom - firstVisibleTop;
-
+      // STEP 6: Draw first captured section (includes sticky + content)
       finalCtx.drawImage(
         firstImg,
         Math.round(firstRect.left * dpr),
@@ -504,16 +515,18 @@ class ElementCapturer {
         Math.round(firstVisibleHeight * dpr)
       );
 
-      console.log('[ElementCapturer] First section stitched');
+      console.log('[ElementCapturer] First section stitched (includes sticky)');
 
-      // STEP 7: Capture remaining sections with new calculations
+      // STEP 7: Capture remaining sections, accounting for sticky height
       for (let i = 1; i < numCaptures; i++) {
         // Rate limiting
         console.log(`[ElementCapturer] Waiting 550ms (rate limit)`);
         await this.delay(550);
 
-        // Calculate target scroll position for this section
-        const targetScrollY = elementAbsoluteTop + i * viewportHeight;
+        // Calculate target scroll position: start from where first capture's content ended
+        // First capture got: stickyHeight + firstCaptureContentHeight
+        // Next capture starts at: elementAbsoluteTop + firstCaptureContentHeight
+        const targetScrollY = elementAbsoluteTop + firstCaptureContentHeight + (i - 1) * viewportHeight;
         const maxScrollY = elementAbsoluteBottom - viewportHeight;
         const clampedScrollY = Math.min(targetScrollY, Math.max(maxScrollY, elementAbsoluteTop));
 
@@ -552,15 +565,17 @@ class ElementCapturer {
         const visibleBottom = Math.min(viewportHeight, currentRect.bottom);
         const visibleHeight = visibleBottom - visibleTop;
 
-        // Calculate canvas position
-        const offsetFromElementTop = actualScrollY - elementAbsoluteTop;
-        const destY = offsetFromElementTop;
+        // Calculate canvas position accounting for sticky height
+        // First capture is at canvas Y=0 and includes firstVisibleHeight (sticky + content)
+        // Subsequent captures continue from firstVisibleHeight
+        const offsetFromContentStart = actualScrollY - (elementAbsoluteTop + firstCaptureContentHeight);
+        const destY = firstVisibleHeight + offsetFromContentStart;
 
         console.log('[ElementCapturer] Stitch params:', {
           section: i + 1,
           visibleTop,
           visibleHeight,
-          offsetFromElementTop,
+          offsetFromContentStart,
           destY,
         });
 
