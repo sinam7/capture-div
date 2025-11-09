@@ -253,28 +253,29 @@ class ElementCapturer {
     // [NEW] Use real content height to determine if stitching is needed
     const needsStitching = contentHeight > viewportHeight;
 
-    // [NEW] Hide all sticky elements before capture
-    const hiddenElements = this.hideAllFixedStickyElements();
-    await this.waitForDOMUpdate();
-
     let imageDataUrl;
     try {
       if (needsStitching) {
         console.log('[ElementCapturer] Element larger than viewport, using multi-scroll capture');
+        // Stitching handles sticky elements internally (checks at each scroll position)
         imageDataUrl = await this.captureWithStitching(element, initialRect, contentHeight, viewportHeight);
       } else {
         console.log('[ElementCapturer] Single viewport capture');
-        imageDataUrl = await this.captureSingleViewport(element, initialRect, contentHeight);
+        // For single viewport, hide sticky elements here
+        const hiddenElements = this.hideAllFixedStickyElements();
+        await this.waitForDOMUpdate();
+
+        try {
+          imageDataUrl = await this.captureSingleViewport(element, initialRect, contentHeight);
+        } finally {
+          // Always restore sticky elements after single capture
+          this.restoreFixedStickyElements(hiddenElements);
+        }
       }
     } catch (error) {
-      // Restore sticky elements on error
-      this.restoreFixedStickyElements(hiddenElements);
       console.error('[ElementCapturer] Native capture failed:', error);
       throw error;
     }
-
-    // [NEW] Restore all sticky elements after capture
-    this.restoreFixedStickyElements(hiddenElements);
 
     return imageDataUrl;
   }
@@ -317,6 +318,7 @@ class ElementCapturer {
   /**
    * [UPDATED] Captures tall element using multiple scrolls and stitches them together
    * Uses real content height to avoid gray space from CSS min-height
+   * Hides sticky elements after each scroll to handle dynamically appearing sticky elements
    * @param {HTMLElement} element - The element to capture
    * @param {DOMRect} initialRect - Initial element bounds
    * @param {number} contentHeight - The real content height
@@ -326,6 +328,9 @@ class ElementCapturer {
   static async captureWithStitching(element, initialRect, contentHeight, viewportHeight) {
     const dpr = window.devicePixelRatio;
     const originalScrollY = window.scrollY;
+
+    // Track all hidden elements across all scroll positions
+    const allHiddenElements = [];
 
     try {
       // 1. Scroll to top of element
@@ -356,7 +361,13 @@ class ElementCapturer {
         window.scrollTo({ top: scrollY, behavior: 'instant' });
         await this.waitForDOMUpdate();
 
-        console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}`);
+        // [NEW] After each scroll, check for newly appeared sticky elements
+        // Some elements become sticky only after scrolling past certain point
+        const newlyHiddenElements = this.hideAllFixedStickyElements();
+        allHiddenElements.push(...newlyHiddenElements);
+        await this.waitForDOMUpdate();
+
+        console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}, hidden ${newlyHiddenElements.length} sticky elements at this scroll position`);
 
         // Update progress indicator
         if (window.elementSelector) {
@@ -412,12 +423,16 @@ class ElementCapturer {
       window.scrollTo({ top: originalScrollY, behavior: 'instant' });
       await this.waitForDOMUpdate();
 
+      // [NEW] Restore all hidden elements from all scroll positions
+      this.restoreFixedStickyElements(allHiddenElements);
+
       console.log('[ElementCapturer] Stitching complete');
       return finalCanvas.toDataURL('image/png');
 
     } catch (error) {
-      // Restore scroll on error
+      // Restore scroll and all hidden elements on error
       window.scrollTo({ top: originalScrollY, behavior: 'instant' });
+      this.restoreFixedStickyElements(allHiddenElements);
       throw error;
     }
   }
