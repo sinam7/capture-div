@@ -116,20 +116,19 @@ class CropTool extends BaseTool {
       return;
     }
 
-    // IMPORTANT: Restore clean image before applying crop (removes overlay)
+    // Step 1: Restore clean image before applying crop (removes overlay)
     this.canvasManager.putImageData(this.savedImageData);
 
-    // Apply the crop
+    // Step 2: Apply the crop
     this.applyCrop();
 
-    // Save to history and return to edge mode with new dimensions
+    // Step 3: Save to history
     this.historyManager.saveState();
+
+    // Step 4: Update state and savedImageData with cropped result
     this.edgeCropMode = true;
     this.edgeCropRect = { top: 0, left: 0, right: 0, bottom: 0 };
     this.savedImageData = this.canvasManager.getImageData();
-
-    // Explicitly clear any overlay remnants by redrawing clean image
-    this.canvasManager.putImageData(this.savedImageData);
 
     console.log('[CropTool] Crop applied and saved to history');
   }
@@ -386,10 +385,10 @@ class CropTool extends BaseTool {
       return;
     }
 
-    // Restore clean image
+    // Step 1: Clear overlay by restoring clean image
     this.canvasManager.putImageData(this.savedImageData);
 
-    // Apply crop
+    // Step 2: Apply crop based on the set size
     const cropX = rect.left;
     const cropY = rect.top;
     const cropWidth = w - rect.left - rect.right;
@@ -397,15 +396,12 @@ class CropTool extends BaseTool {
 
     this.canvasManager.crop(cropX, cropY, cropWidth, cropHeight);
 
-    // Save to history
+    // Step 3: Save to history
     this.historyManager.saveState();
 
-    // Reset edge crop state and ensure clean canvas
-    this.edgeCropRect = { top: 0, left: 0, right: 0, bottom: 0 };
+    // Step 4: Update savedImageData with cropped result
     this.savedImageData = this.canvasManager.getImageData();
-
-    // Explicitly clear any overlay remnants by redrawing clean image
-    this.canvasManager.putImageData(this.savedImageData);
+    this.edgeCropRect = { top: 0, left: 0, right: 0, bottom: 0 };
 
     console.log('[CropTool] Edge crop applied');
   }
