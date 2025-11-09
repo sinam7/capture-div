@@ -172,7 +172,7 @@ class ElementCapturer {
 
   /**
    * Captures using Chrome's native tab capture API
-   * Note: This only captures visible viewport, elements must be scrolled into view first
+   * Note: For elements larger than viewport, uses multi-scroll stitching
    * @param {HTMLElement} element - The element to capture
    * @returns {Promise<string>} Data URL of the captured image
    */
@@ -180,59 +180,199 @@ class ElementCapturer {
     console.log('[ElementCapturer] Capturing with Chrome native API');
 
     try {
-      // Ensure element is in viewport
+      // Scroll to top of element
       await this.scrollElementIntoFullView(element);
       await this.waitForDOMUpdate();
 
-      // Get element position relative to viewport
-      const rect = element.getBoundingClientRect();
-      const scrollX = window.scrollX;
-      const scrollY = window.scrollY;
+      // Get initial element rect
+      const initialRect = element.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
 
-      console.log('[ElementCapturer] Element rect:', {
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-        scrollX,
-        scrollY,
+      console.log('[ElementCapturer] Element dimensions:', {
+        left: initialRect.left,
+        top: initialRect.top,
+        width: initialRect.width,
+        height: initialRect.height,
+        viewportHeight,
       });
 
-      // Request visible tab screenshot from background
-      const response = await Messaging.sendToBackground({
-        action: 'captureVisibleTab',
-        rect: {
-          x: rect.left + scrollX,
-          y: rect.top + scrollY,
-          width: rect.width,
-          height: rect.height,
-          left: rect.left,
-          top: rect.top,
-        },
-        devicePixelRatio: window.devicePixelRatio,
-        scrollX,
-        scrollY,
-      });
+      // Check if element is taller than viewport
+      const needsStitching = initialRect.height > viewportHeight * 0.9; // Use 90% to account for edges
 
-      if (!response.success) {
-        throw new Error(response.error || 'Capture failed');
+      if (needsStitching) {
+        console.log('[ElementCapturer] Element larger than viewport, using multi-scroll capture');
+        return await this.captureWithStitching(element, initialRect);
       }
 
-      console.log('[ElementCapturer] Tab captured, cropping to element bounds');
-
-      // Crop the screenshot to element bounds
-      const croppedImage = await this.cropImage(
-        response.imageData,
-        rect,
-        window.devicePixelRatio
-      );
-
-      console.log('[ElementCapturer] Native capture successful');
-      return croppedImage;
+      // Single capture for elements that fit in viewport
+      return await this.captureSingleViewport(element, initialRect);
     } catch (error) {
       console.error('[ElementCapturer] Native capture failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Captures element that fits in single viewport
+   * @param {HTMLElement} element - The element to capture
+   * @param {DOMRect} rect - Element bounds
+   * @returns {Promise<string>} Data URL of the captured image
+   */
+  static async captureSingleViewport(element, rect) {
+    console.log('[ElementCapturer] Single viewport capture');
+
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+
+    // Request visible tab screenshot from background
+    const response = await Messaging.sendToBackground({
+      action: 'captureVisibleTab',
+      rect: {
+        x: rect.left + scrollX,
+        y: rect.top + scrollY,
+        width: rect.width,
+        height: rect.height,
+        left: rect.left,
+        top: rect.top,
+      },
+      devicePixelRatio: window.devicePixelRatio,
+      scrollX,
+      scrollY,
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'Capture failed');
+    }
+
+    // Crop to element bounds
+    return await this.cropImage(response.imageData, rect, window.devicePixelRatio);
+  }
+
+  /**
+   * Captures tall element using multiple scrolls and stitches them together
+   * @param {HTMLElement} element - The element to capture
+   * @param {DOMRect} initialRect - Initial element bounds
+   * @returns {Promise<string>} Data URL of the stitched image
+   */
+  static async captureWithStitching(element, initialRect) {
+    console.log('[ElementCapturer] Starting multi-scroll capture and stitch');
+
+    const dpr = window.devicePixelRatio;
+    const viewportHeight = window.innerHeight;
+    const elementHeight = initialRect.height;
+    const elementWidth = initialRect.width;
+    const elementLeft = initialRect.left;
+
+    // Calculate number of captures needed (with 10% overlap to avoid gaps)
+    const captureHeight = viewportHeight * 0.9;
+    const numCaptures = Math.ceil(elementHeight / captureHeight);
+
+    console.log('[ElementCapturer] Stitching params:', {
+      elementHeight,
+      viewportHeight,
+      captureHeight,
+      numCaptures,
+    });
+
+    // Store original scroll position
+    const originalScrollY = window.scrollY;
+
+    // Get element's absolute position
+    const elementAbsoluteTop = initialRect.top + originalScrollY;
+
+    // Create canvas for final stitched image
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = Math.round(elementWidth * dpr);
+    finalCanvas.height = Math.round(elementHeight * dpr);
+    const finalCtx = finalCanvas.getContext('2d');
+
+    try {
+      // Capture each section
+      for (let i = 0; i < numCaptures; i++) {
+        // Calculate scroll position for this capture
+        const scrollOffset = i * captureHeight;
+        const targetScrollY = elementAbsoluteTop + scrollOffset;
+
+        // Scroll to position
+        window.scrollTo({
+          top: targetScrollY,
+          behavior: 'instant',
+        });
+
+        await this.waitForDOMUpdate();
+
+        // Get updated rect after scroll
+        const currentRect = element.getBoundingClientRect();
+
+        console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures} at scroll ${targetScrollY}`);
+
+        // Capture visible viewport
+        const response = await Messaging.sendToBackground({
+          action: 'captureVisibleTab',
+        });
+
+        if (!response.success) {
+          throw new Error(`Capture ${i + 1} failed: ${response.error}`);
+        }
+
+        // Load captured image
+        const img = await this.loadImage(response.imageData);
+
+        // Calculate which part of the element is visible in this capture
+        const visibleTop = Math.max(0, currentRect.top);
+        const visibleHeight = Math.min(currentRect.height, viewportHeight - visibleTop);
+
+        // Calculate destination position in final canvas
+        const destY = scrollOffset;
+
+        // Draw this section onto final canvas
+        finalCtx.drawImage(
+          img,
+          Math.round(currentRect.left * dpr), // source x
+          Math.round(visibleTop * dpr), // source y
+          Math.round(elementWidth * dpr), // source width
+          Math.round(visibleHeight * dpr), // source height
+          0, // dest x
+          Math.round(destY * dpr), // dest y
+          Math.round(elementWidth * dpr), // dest width
+          Math.round(visibleHeight * dpr) // dest height
+        );
+
+        console.log(`[ElementCapturer] Section ${i + 1} stitched`);
+      }
+
+      // Restore original scroll position
+      window.scrollTo({
+        top: originalScrollY,
+        behavior: 'instant',
+      });
+
+      await this.waitForDOMUpdate();
+
+      console.log('[ElementCapturer] Stitching complete');
+      return finalCanvas.toDataURL('image/png');
+    } catch (error) {
+      // Restore scroll on error
+      window.scrollTo({
+        top: originalScrollY,
+        behavior: 'instant',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Loads image from data URL
+   * @param {string} dataUrl - Image data URL
+   * @returns {Promise<HTMLImageElement>}
+   */
+  static loadImage(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = dataUrl;
+    });
   }
 
   /**
