@@ -27,6 +27,7 @@
     {
       "matches": ["<all_urls>"],
       "js": [
+        "libs/html2canvas.min.js",
         "src/utils/dom-utils.js",
         "src/utils/messaging.js",
         "src/content/highlighter.js",
