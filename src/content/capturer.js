@@ -70,7 +70,8 @@ class ElementCapturer {
   /**
    * [NEW] Hides all fixed/sticky positioned elements on the page
    * Prevents them from appearing in screenshots or duplicating during stitching
-   * @returns {Array} Array of {element, originalDisplay}
+   * Uses multiple methods to ensure elements are completely hidden
+   * @returns {Array} Array of {element, originalDisplay, originalVisibility, originalPosition}
    */
   static hideAllFixedStickyElements() {
     console.log('[ElementCapturer] Hiding ALL fixed/sticky positioned elements');
@@ -90,8 +91,14 @@ class ElementCapturer {
         hiddenElements.push({
           element: el,
           originalDisplay: el.style.display,
+          originalVisibility: el.style.visibility,
+          originalPosition: el.style.position,
         });
+
+        // Multiple hiding methods for maximum effectiveness
         el.style.display = 'none';
+        el.style.visibility = 'hidden';
+        el.style.position = 'static';
       }
     });
 
@@ -105,8 +112,10 @@ class ElementCapturer {
    */
   static restoreFixedStickyElements(hiddenElements) {
     console.log(`[ElementCapturer] Restoring ${hiddenElements.length} elements`);
-    hiddenElements.forEach(({ element, originalDisplay }) => {
+    hiddenElements.forEach(({ element, originalDisplay, originalVisibility, originalPosition }) => {
       element.style.display = originalDisplay || '';
+      element.style.visibility = originalVisibility || '';
+      element.style.position = originalPosition || '';
     });
   }
 
@@ -361,26 +370,39 @@ class ElementCapturer {
         const img = await this.loadImage(response.imageData);
         const currentRect = element.getBoundingClientRect();
 
-        // 5. Calculate source and destination regions
-        const sourceY = (i === 0) ? currentRect.top : 0;
+        // 5. Calculate visible portion of element in current viewport
+        const visibleTop = Math.max(0, currentRect.top);
+        const visibleBottom = Math.min(viewportHeight, currentRect.bottom);
+        const visibleHeight = visibleBottom - visibleTop;
+
+        // Calculate how much we should actually capture (limited by remaining content)
         const remainingHeight = contentHeight - capturedHeight;
-        const sourceHeight = Math.min(viewportHeight, remainingHeight);
-        const destY = capturedHeight;
+        const captureHeight = Math.min(visibleHeight, remainingHeight);
+
+        console.log('[ElementCapturer] Stitch section:', {
+          section: i + 1,
+          visibleTop,
+          visibleBottom,
+          visibleHeight,
+          remainingHeight,
+          captureHeight,
+          capturedHeight
+        });
 
         // 6. Draw to canvas
         finalCtx.drawImage(
           img,
-          Math.round(currentRect.left * dpr), // source x
-          Math.round(sourceY * dpr),        // source y
-          Math.round(elementWidth * dpr),     // source width
-          Math.round(sourceHeight * dpr),   // source height
-          0,                                // dest x
-          Math.round(destY * dpr),          // dest y
-          Math.round(elementWidth * dpr),     // dest width
-          Math.round(sourceHeight * dpr)    // dest height
+          Math.round(currentRect.left * dpr),    // source x
+          Math.round(visibleTop * dpr),          // source y (where element starts in viewport)
+          Math.round(elementWidth * dpr),        // source width
+          Math.round(captureHeight * dpr),       // source height (actual visible height)
+          0,                                     // dest x
+          Math.round(capturedHeight * dpr),      // dest y (accumulated height)
+          Math.round(elementWidth * dpr),        // dest width
+          Math.round(captureHeight * dpr)        // dest height
         );
 
-        capturedHeight += sourceHeight;
+        capturedHeight += captureHeight;
 
         // Rate limiting
         await this.delay(100);
