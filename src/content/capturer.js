@@ -193,6 +193,14 @@ class ElementCapturer {
   }
 
   /**
+   * Simple delay utility for rate limiting
+   * @param {number} ms - Milliseconds to delay
+   */
+  static async delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
    * Captures using html2canvas (best method - handles elements outside viewport)
    * @param {HTMLElement} element - The element to capture
    * @returns {Promise<string>} Data URL of the captured image
@@ -378,6 +386,13 @@ class ElementCapturer {
     try {
       // Capture each section
       for (let i = 0; i < numCaptures; i++) {
+        // IMPORTANT: Add delay between captures to respect Chrome's rate limit
+        // Chrome limits captureVisibleTab to ~2 calls/second
+        if (i > 0) {
+          console.log(`[ElementCapturer] Waiting 550ms before next capture (rate limit)`);
+          await this.delay(550); // 550ms delay = ~1.8 calls/sec (safely under 2/sec limit)
+        }
+
         // Calculate scroll position for this capture
         const scrollOffset = i * captureHeight;
         const targetScrollY = elementAbsoluteTop + scrollOffset;
@@ -394,6 +409,11 @@ class ElementCapturer {
         const currentRect = element.getBoundingClientRect();
 
         console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures} at scroll ${targetScrollY}`);
+
+        // Notify progress (for UI updates)
+        if (window.elementSelector) {
+          window.elementSelector.updateCaptureProgress(i + 1, numCaptures);
+        }
 
         // Capture visible viewport
         const response = await Messaging.sendToBackground({

@@ -17,6 +17,8 @@ class ElementSelector {
     this.minDepth = 0; // Depth of root (usually 0)
     this.maxDepth = 0; // Depth of deepest child
     this.instructionsTimer = null; // Timer for auto-hiding instructions
+    this.mouseMoveTimeout = null; // Throttle timer for mousemove (performance optimization)
+    this.throttleDelay = 16; // ~60fps (performance optimization for complex pages)
 
     // Bound event handlers for proper cleanup
     this.handleMouseMove = this.handleMouseMove.bind(this);
@@ -54,6 +56,13 @@ class ElementSelector {
     this.originalElement = null;
     this.deepestChild = null;
     this.hoveredElement = null;
+
+    // Clear throttle timer
+    if (this.mouseMoveTimeout) {
+      clearTimeout(this.mouseMoveTimeout);
+      this.mouseMoveTimeout = null;
+    }
+
     console.log('[ElementSelector] Deactivated successfully');
   }
 
@@ -80,11 +89,20 @@ class ElementSelector {
   }
 
   /**
-   * Handles mouse move events for hover highlighting
+   * Handles mouse move events for hover highlighting (throttled for performance)
    * @param {MouseEvent} event - The mouse event
    */
   handleMouseMove(event) {
     if (!this.isActive || this.selectedElement) return;
+
+    // Throttle mousemove events for performance on complex pages
+    if (this.mouseMoveTimeout) {
+      return; // Skip this event, we're still processing the previous one
+    }
+
+    this.mouseMoveTimeout = setTimeout(() => {
+      this.mouseMoveTimeout = null;
+    }, this.throttleDelay);
 
     const element = event.target;
 
@@ -553,6 +571,20 @@ class ElementSelector {
   }
 
   /**
+   * Updates the capture progress indicator for long captures
+   * @param {number} current - Current section being captured
+   * @param {number} total - Total number of sections
+   */
+  updateCaptureProgress(current, total) {
+    const captureBtn = this.sliderContainer?.querySelector('.element-selector__btn--capture');
+    if (captureBtn) {
+      const percentage = Math.round((current / total) * 100);
+      captureBtn.textContent = `⏳ Capturing ${current}/${total} (${percentage}%)`;
+      console.log(`[ElementSelector] Progress: ${current}/${total} (${percentage}%)`);
+    }
+  }
+
+  /**
    * Shows a notification message
    * @param {string} message - The message to show
    */
@@ -593,6 +625,8 @@ Messaging.onMessage((message, sender, sendResponse) => {
     if (!elementSelector) {
       console.log('[ElementSelector] Creating new ElementSelector instance');
       elementSelector = new ElementSelector();
+      // Make it globally accessible for progress updates
+      window.elementSelector = elementSelector;
     }
     elementSelector.activate();
     sendResponse({ success: true });
