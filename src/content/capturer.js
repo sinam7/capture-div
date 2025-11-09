@@ -401,81 +401,119 @@ class ElementCapturer {
 
     const dpr = window.devicePixelRatio;
     const viewportHeight = window.innerHeight;
-    const elementHeight = initialRect.height;
-    const elementWidth = initialRect.width;
 
     // Store original scroll position for restoration
     const originalScrollY = window.scrollY;
 
-    // Calculate element's absolute position in document
-    const elementAbsoluteTop = initialRect.top + originalScrollY;
-    const elementAbsoluteBottom = elementAbsoluteTop + elementHeight;
-
-    // Calculate number of viewport-sized captures needed
-    const numCaptures = Math.ceil(elementHeight / viewportHeight);
-
-    console.log('[ElementCapturer] Stitching params:', {
-      elementHeight,
-      viewportHeight,
-      numCaptures,
-      elementAbsoluteTop,
-      elementAbsoluteBottom,
-    });
-
     // IMPORTANT: Hide all fixed/sticky elements OUTSIDE target to prevent floating UI duplication
-    // We keep fixed elements inside target visible for first capture, then hide them
     const hiddenExternalFixedElements = this.hideFixedElements(element);
 
-    // IMPORTANT: Wait for DOM to update and ensure hiding takes visual effect
+    // Wait for DOM to update and ensure hiding takes visual effect
     await this.waitForDOMUpdate();
-    // Extra delay to ensure external floating UI hiding is fully rendered before first capture
     await this.delay(100);
-
-    // Create canvas for final stitched image
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = Math.round(elementWidth * dpr);
-    finalCanvas.height = Math.round(elementHeight * dpr);
-    const finalCtx = finalCanvas.getContext('2d');
 
     // Track fixed elements inside target (hidden after first capture)
     let hiddenInternalFixedElements = [];
 
     try {
-
       // STEP 1: Scroll to element's top to establish predictable starting point
-      // (Industry standard: Chrome DevTools, Firefox all start from element top)
       window.scrollTo({
-        top: elementAbsoluteTop,
+        top: initialRect.top + originalScrollY,
         behavior: 'instant',
       });
       await this.waitForDOMUpdate();
 
-      console.log('[ElementCapturer] Scrolled to element top:', elementAbsoluteTop);
+      console.log('[ElementCapturer] Scrolled to element top');
 
-      // STEP 2: Capture each viewport-sized section
-      for (let i = 0; i < numCaptures; i++) {
-        // Rate limiting: Chrome allows ~2 captures/second
-        if (i > 0) {
-          console.log(`[ElementCapturer] Waiting 550ms (rate limit)`);
-          await this.delay(550);
-        }
+      // STEP 2: Capture first section with sticky elements visible
+      console.log('[ElementCapturer] Capturing first section (with sticky elements visible)');
+
+      const firstResponse = await Messaging.sendToBackground({
+        action: 'captureVisibleTab',
+      });
+
+      if (!firstResponse.success) {
+        throw new Error(`First capture failed: ${firstResponse.error}`);
+      }
+
+      const firstImg = await this.loadImage(firstResponse.imageData);
+      const firstRect = element.getBoundingClientRect();
+
+      // Progress update
+      if (window.elementSelector) {
+        window.elementSelector.updateCaptureProgress(1, '?');
+      }
+
+      // STEP 3: Hide internal sticky elements after first capture
+      if (Math.ceil(initialRect.height / viewportHeight) > 1) {
+        console.log('[ElementCapturer] Hiding internal fixed/sticky elements');
+        hiddenInternalFixedElements = this.hideFixedElementsInsideTarget(element);
+        await this.waitForDOMUpdate();
+        await this.delay(100);
+      }
+
+      // STEP 4: Recalculate element dimensions after hiding sticky elements
+      const recalcRect = element.getBoundingClientRect();
+      const elementWidth = recalcRect.width;
+      const elementHeight = recalcRect.height;
+      const elementAbsoluteTop = recalcRect.top + window.scrollY;
+      const elementAbsoluteBottom = elementAbsoluteTop + elementHeight;
+
+      // Recalculate number of captures needed
+      const numCaptures = Math.ceil(elementHeight / viewportHeight);
+
+      console.log('[ElementCapturer] Recalculated stitching params:', {
+        elementHeight,
+        viewportHeight,
+        numCaptures,
+        elementAbsoluteTop,
+        elementAbsoluteBottom,
+        originalHeight: initialRect.height,
+        heightChange: initialRect.height - elementHeight,
+      });
+
+      // STEP 5: Create canvas with recalculated dimensions
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = Math.round(elementWidth * dpr);
+      finalCanvas.height = Math.round(elementHeight * dpr);
+      const finalCtx = finalCanvas.getContext('2d');
+
+      // STEP 6: Draw first captured section
+      const firstVisibleTop = Math.max(0, firstRect.top);
+      const firstVisibleBottom = Math.min(viewportHeight, firstRect.bottom);
+      const firstVisibleHeight = firstVisibleBottom - firstVisibleTop;
+
+      finalCtx.drawImage(
+        firstImg,
+        Math.round(firstRect.left * dpr),
+        Math.round(firstVisibleTop * dpr),
+        Math.round(elementWidth * dpr),
+        Math.round(firstVisibleHeight * dpr),
+        0,
+        0,
+        Math.round(elementWidth * dpr),
+        Math.round(firstVisibleHeight * dpr)
+      );
+
+      console.log('[ElementCapturer] First section stitched');
+
+      // STEP 7: Capture remaining sections with new calculations
+      for (let i = 1; i < numCaptures; i++) {
+        // Rate limiting
+        console.log(`[ElementCapturer] Waiting 550ms (rate limit)`);
+        await this.delay(550);
 
         // Calculate target scroll position for this section
-        // Each section is one viewport height from element top
         const targetScrollY = elementAbsoluteTop + i * viewportHeight;
-
-        // Clamp to ensure we don't scroll past element bottom
         const maxScrollY = elementAbsoluteBottom - viewportHeight;
         const clampedScrollY = Math.min(targetScrollY, Math.max(maxScrollY, elementAbsoluteTop));
 
-        // Scroll to position (skip if already there from previous iteration)
-        if (i > 0) {
-          window.scrollTo({
-            top: clampedScrollY,
-            behavior: 'instant',
-          });
-          await this.waitForDOMUpdate();
-        }
+        // Scroll to position
+        window.scrollTo({
+          top: clampedScrollY,
+          behavior: 'instant',
+        });
+        await this.waitForDOMUpdate();
 
         const actualScrollY = window.scrollY;
 
@@ -483,12 +521,12 @@ class ElementCapturer {
           `[ElementCapturer] Capture ${i + 1}/${numCaptures}: scroll=${actualScrollY}, target=${targetScrollY}`
         );
 
-        // Notify progress
+        // Progress update
         if (window.elementSelector) {
           window.elementSelector.updateCaptureProgress(i + 1, numCaptures);
         }
 
-        // STEP 3: Capture viewport
+        // Capture viewport
         const response = await Messaging.sendToBackground({
           action: 'captureVisibleTab',
         });
@@ -498,57 +536,39 @@ class ElementCapturer {
         }
 
         const img = await this.loadImage(response.imageData);
-
-        // STEP 4: Calculate element position in viewport
         const currentRect = element.getBoundingClientRect();
 
-        // Where is the element in this viewport capture?
-        const elementTopInViewport = currentRect.top;
-        const elementBottomInViewport = currentRect.bottom;
-
-        // What part of the element is visible in this viewport?
-        const visibleTop = Math.max(0, elementTopInViewport);
-        const visibleBottom = Math.min(viewportHeight, elementBottomInViewport);
+        // Calculate visible portion
+        const visibleTop = Math.max(0, currentRect.top);
+        const visibleBottom = Math.min(viewportHeight, currentRect.bottom);
         const visibleHeight = visibleBottom - visibleTop;
 
-        // STEP 5: Calculate where to place this section in final canvas
-        // Key formula: canvas_y = (current_scroll - element_top)
-        // This gives us the offset from element's top edge
+        // Calculate canvas position
         const offsetFromElementTop = actualScrollY - elementAbsoluteTop;
         const destY = offsetFromElementTop;
 
         console.log('[ElementCapturer] Stitch params:', {
           section: i + 1,
-          elementTopInViewport,
           visibleTop,
           visibleHeight,
           offsetFromElementTop,
           destY,
         });
 
-        // STEP 6: Draw this section onto final canvas
+        // Draw section
         finalCtx.drawImage(
           img,
-          Math.round(currentRect.left * dpr), // source x (element's left edge in viewport)
-          Math.round(visibleTop * dpr), // source y (where element starts in viewport)
-          Math.round(elementWidth * dpr), // source width
-          Math.round(visibleHeight * dpr), // source height
-          0, // dest x (always 0, element fills width)
-          Math.round(destY * dpr), // dest y (offset from element top)
-          Math.round(elementWidth * dpr), // dest width
-          Math.round(visibleHeight * dpr) // dest height
+          Math.round(currentRect.left * dpr),
+          Math.round(visibleTop * dpr),
+          Math.round(elementWidth * dpr),
+          Math.round(visibleHeight * dpr),
+          0,
+          Math.round(destY * dpr),
+          Math.round(elementWidth * dpr),
+          Math.round(visibleHeight * dpr)
         );
 
         console.log(`[ElementCapturer] Section ${i + 1} stitched at destY=${destY}`);
-
-        // IMPORTANT: After first capture, hide fixed/sticky elements INSIDE target
-        // to prevent duplication in subsequent captures
-        if (i === 0 && numCaptures > 1) {
-          console.log('[ElementCapturer] First capture complete, hiding internal fixed elements');
-          hiddenInternalFixedElements = this.hideFixedElementsInsideTarget(element);
-          await this.waitForDOMUpdate();
-          await this.delay(100); // Ensure hiding takes effect
-        }
       }
 
       // Restore original scroll position
