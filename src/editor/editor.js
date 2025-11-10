@@ -10,6 +10,7 @@ class ImageEditor {
     this.historyManager = new HistoryManager(this.canvasManager);
 
     this.tools = {
+      move: new MoveTool(this),
       crop: new CropTool(this),
       text: new TextTool(this),
       arrow: new ArrowTool(this),
@@ -248,7 +249,7 @@ class ImageEditor {
 
       // Tool shortcuts
       const shortcuts = {
-        v: 'select',
+        v: 'move',
         c: 'crop',
         t: 'text',
         a: 'arrow',
