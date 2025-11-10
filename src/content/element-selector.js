@@ -263,6 +263,7 @@ class ElementSelector {
     this.deepestChild = null;
     this.highlighter.removeHighlight();
     this.removeSlider();
+    this.hideInstructions();
   }
 
   /**
