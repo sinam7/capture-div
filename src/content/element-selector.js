@@ -502,10 +502,11 @@ class ElementSelector {
       this.instructionsTimer = null;
     }
 
-    const instructions = document.getElementById('element-selector-instructions');
-    if (instructions) {
-      console.log('[ElementSelector] Removing instructions element');
-      DOMUtils.removeElement(instructions);
+    // Remove all instruction elements (use querySelectorAll to catch all instances)
+    const allInstructions = document.querySelectorAll('.element-selector__instructions');
+    if (allInstructions.length > 0) {
+      console.log(`[ElementSelector] Removing ${allInstructions.length} instruction element(s)`);
+      allInstructions.forEach(el => DOMUtils.removeElement(el));
     } else {
       console.log('[ElementSelector] No instructions element found to remove');
     }
