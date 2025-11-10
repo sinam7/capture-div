@@ -334,12 +334,6 @@ class ElementCapturer {
           // [FIX] Recalculate element position after hiding sticky elements
           // because hiding sticky elements can cause page scroll/layout changes
           const updatedRect = element.getBoundingClientRect();
-          console.log('[ElementCapturer] Position after hiding sticky elements:', {
-            before: { left: initialRect.left, top: initialRect.top },
-            after: { left: updatedRect.left, top: updatedRect.top },
-            offset: { x: updatedRect.left - initialRect.left, y: updatedRect.top - initialRect.top }
-          });
-
           imageDataUrl = await this.captureSingleViewport(element, updatedRect, contentHeight);
         } finally {
           // Always restore sticky elements after single capture
@@ -414,11 +408,6 @@ class ElementCapturer {
 
       // Recalculate element position after hiding sticky elements
       const updatedRect = element.getBoundingClientRect();
-      console.log('[ElementCapturer] Stitching position after hiding sticky elements:', {
-        before: { left: initialRect.left, top: initialRect.top },
-        after: { left: updatedRect.left, top: updatedRect.top },
-        offset: { x: updatedRect.left - initialRect.left, y: updatedRect.top - initialRect.top }
-      });
 
       // 1. Scroll to top of element (using updated position)
       window.scrollTo({
