@@ -22,7 +22,16 @@ class MoveTool extends BaseTool {
    */
   updateCursor() {
     this.canvas.classList.remove('cursor-default', 'cursor-move', 'cursor-text', 'cursor-crosshair');
-    this.canvas.classList.add('cursor-move');
+    this.canvas.style.cursor = 'grab';
+  }
+
+  /**
+   * Deactivates the tool and resets cursor
+   */
+  deactivate() {
+    super.deactivate();
+    // Reset cursor to default defined in CSS
+    this.canvas.style.cursor = '';
   }
 
   /**
@@ -65,24 +74,7 @@ class MoveTool extends BaseTool {
   /**
    * Override handleDocumentMouseMove to use screen coordinates directly
    */
-  handleDocumentMouseMove = (e) => {
-    if (!this.isDragging) return;
-
-    // Calculate the delta from the last position
-    const deltaX = e.clientX - this.lastClientX;
-    const deltaY = e.clientY - this.lastClientY;
-
-    // Update translate position
-    this.editor.translateX += deltaX;
-    this.editor.translateY += deltaY;
-
-    // Update last position
-    this.lastClientX = e.clientX;
-    this.lastClientY = e.clientY;
-
-    // Apply transform
-    this.updateCanvasTransform();
-  };
+  handleDocumentMouseMove = this.handleMouseMove;
 
   /**
    * Override handleMouseUp
@@ -102,17 +94,7 @@ class MoveTool extends BaseTool {
   /**
    * Override handleDocumentMouseUp
    */
-  handleDocumentMouseUp = (e) => {
-    if (!this.isDragging) return;
-
-    this.isDragging = false;
-
-    // Reset cursor to grab (not grabbing)
-    this.canvas.style.cursor = 'grab';
-
-    // Remove document listeners
-    this.removeDocumentListeners();
-  };
+  handleDocumentMouseUp = this.handleMouseUp;
 
   /**
    * Updates the canvas transform with both scale and translate
