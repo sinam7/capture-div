@@ -10,12 +10,11 @@ class ElementSelector {
     this.highlighter = new ElementHighlighter();
     this.selectedElement = null;
     this.originalElement = null; // Store the originally clicked element
-    this.deepestChild = null; // Store the deepest child for slider range
     this.hoveredElement = null;
     this.sliderContainer = null;
     this.currentDepth = 0;
     this.minDepth = 0; // Depth of root (usually 0)
-    this.maxDepth = 0; // Depth of deepest child
+    this.maxDepth = 0; // Depth of selected element (max depth on slider)
     this.instructionsTimer = null; // Timer for auto-hiding instructions
     this.mouseMoveTimeout = null; // Throttle timer for mousemove (performance optimization)
     this.throttleDelay = 16; // ~60fps (performance optimization for complex pages)
@@ -54,7 +53,6 @@ class ElementSelector {
     this.hideInstructions();
     this.selectedElement = null;
     this.originalElement = null;
-    this.deepestChild = null;
     this.hoveredElement = null;
 
     // Clear throttle timer
@@ -226,6 +224,7 @@ class ElementSelector {
 
   /**
    * Selects an element and shows the slider
+   * Selected element becomes the max depth (rightmost position on slider)
    * @param {HTMLElement} element - The element to select
    */
   selectElement(element) {
@@ -235,9 +234,8 @@ class ElementSelector {
     this.selectedElement = element;
     this.currentDepth = DOMTraversal.getElementDepth(element);
 
-    // Find the deepest visible child to set max depth
-    this.deepestChild = DOMTraversal.getDeepestVisibleChild(element);
-    this.maxDepth = DOMTraversal.getElementDepth(this.deepestChild);
+    // Selected element is the max depth (no need to find deepest child)
+    this.maxDepth = this.currentDepth;
     this.minDepth = 0; // Always allow going up to root
 
     console.log('[ElementSelector] Depth range:', {
@@ -245,7 +243,6 @@ class ElementSelector {
       min: this.minDepth,
       max: this.maxDepth,
       originalElementTag: element.tagName,
-      deepestChildTag: this.deepestChild.tagName,
     });
 
     this.highlighter.removeHighlight();
@@ -260,7 +257,6 @@ class ElementSelector {
     console.log('[ElementSelector] deselectElement() called');
     this.selectedElement = null;
     this.originalElement = null;
-    this.deepestChild = null;
     this.highlighter.removeHighlight();
     this.removeSlider();
     this.hideInstructions();
