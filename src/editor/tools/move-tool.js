@@ -7,9 +7,11 @@ class MoveTool extends BaseTool {
     super(editor);
     this.canvasWrapper = editor.canvasWrapper;
     this.isDragging = false;
+    this.lastClientX = 0;
+    this.lastClientY = 0;
 
     // Initialize translate position if not exists
-    if (!this.editor.translateX) {
+    if (this.editor.translateX === undefined) {
       this.editor.translateX = 0;
       this.editor.translateY = 0;
     }
@@ -24,55 +26,93 @@ class MoveTool extends BaseTool {
   }
 
   /**
-   * Called when dragging starts
+   * Override handleMouseDown to use screen coordinates directly
    */
-  onDrawStart(x, y) {
+  handleMouseDown = (e) => {
     this.isDragging = true;
-
-    // Store initial translate position
-    this.initialTranslateX = this.editor.translateX || 0;
-    this.initialTranslateY = this.editor.translateY || 0;
-
-    // Store initial mouse position in screen coordinates (not canvas coordinates)
-    const rect = this.canvas.getBoundingClientRect();
-    this.initialScreenX = this.startX * (this.editor.zoom || 1.0);
-    this.initialScreenY = this.startY * (this.editor.zoom || 1.0);
+    this.lastClientX = e.clientX;
+    this.lastClientY = e.clientY;
 
     // Change cursor to grabbing
     this.canvas.style.cursor = 'grabbing';
-  }
+
+    // Attach document listeners to track mouse outside canvas
+    this.attachDocumentListeners();
+  };
 
   /**
-   * Called when mouse moves while dragging
+   * Override handleMouseMove to use screen coordinates directly
    */
-  onDrawMove(x, y) {
+  handleMouseMove = (e) => {
     if (!this.isDragging) return;
 
-    // Calculate how much the mouse has moved in screen coordinates
-    const zoom = this.editor.zoom || 1.0;
-    const currentScreenX = x * zoom;
-    const currentScreenY = y * zoom;
-
-    const deltaX = currentScreenX - this.initialScreenX;
-    const deltaY = currentScreenY - this.initialScreenY;
+    // Calculate the delta from the last position
+    const deltaX = e.clientX - this.lastClientX;
+    const deltaY = e.clientY - this.lastClientY;
 
     // Update translate position
-    this.editor.translateX = this.initialTranslateX + deltaX;
-    this.editor.translateY = this.initialTranslateY + deltaY;
+    this.editor.translateX += deltaX;
+    this.editor.translateY += deltaY;
 
-    // Apply both scale and translate transforms
+    // Update last position
+    this.lastClientX = e.clientX;
+    this.lastClientY = e.clientY;
+
+    // Apply transform
     this.updateCanvasTransform();
-  }
+  };
 
   /**
-   * Called when dragging ends
+   * Override handleDocumentMouseMove to use screen coordinates directly
    */
-  onDrawEnd(x, y) {
+  handleDocumentMouseMove = (e) => {
+    if (!this.isDragging) return;
+
+    // Calculate the delta from the last position
+    const deltaX = e.clientX - this.lastClientX;
+    const deltaY = e.clientY - this.lastClientY;
+
+    // Update translate position
+    this.editor.translateX += deltaX;
+    this.editor.translateY += deltaY;
+
+    // Update last position
+    this.lastClientX = e.clientX;
+    this.lastClientY = e.clientY;
+
+    // Apply transform
+    this.updateCanvasTransform();
+  };
+
+  /**
+   * Override handleMouseUp
+   */
+  handleMouseUp = (e) => {
+    if (!this.isDragging) return;
+
     this.isDragging = false;
 
     // Reset cursor to grab (not grabbing)
     this.canvas.style.cursor = 'grab';
-  }
+
+    // Remove document listeners
+    this.removeDocumentListeners();
+  };
+
+  /**
+   * Override handleDocumentMouseUp
+   */
+  handleDocumentMouseUp = (e) => {
+    if (!this.isDragging) return;
+
+    this.isDragging = false;
+
+    // Reset cursor to grab (not grabbing)
+    this.canvas.style.cursor = 'grab';
+
+    // Remove document listeners
+    this.removeDocumentListeners();
+  };
 
   /**
    * Updates the canvas transform with both scale and translate
