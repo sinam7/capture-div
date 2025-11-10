@@ -10,6 +10,7 @@ class ImageEditor {
     this.historyManager = new HistoryManager(this.canvasManager);
 
     this.tools = {
+      move: new MoveTool(this),
       crop: new CropTool(this),
       text: new TextTool(this),
       arrow: new ArrowTool(this),
@@ -27,6 +28,10 @@ class ImageEditor {
     this.minZoom = 0.1; // 10%
     this.maxZoom = 5.0; // 500%
     this.zoomStep = 0.1; // 10% per step
+
+    // Pan/translate properties
+    this.translateX = 0;
+    this.translateY = 0;
 
     this.init();
   }
@@ -175,14 +180,21 @@ class ImageEditor {
   }
 
   /**
+   * Updates the canvas transform with current zoom and translate values
+   */
+  updateCanvasTransform() {
+    this.canvas.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.zoom})`;
+  }
+
+  /**
    * Sets zoom level
    * @param {number} newZoom - New zoom level
    */
   setZoom(newZoom) {
     this.zoom = Math.max(this.minZoom, Math.min(newZoom, this.maxZoom));
 
-    // Apply transform to canvas
-    this.canvas.style.transform = `scale(${this.zoom})`;
+    // Apply transform to canvas (preserve translate)
+    this.updateCanvasTransform();
 
     // Adjust canvas wrapper to enable proper scrolling
     // The canvas takes up space based on its actual size, but visually scales
@@ -248,7 +260,7 @@ class ImageEditor {
 
       // Tool shortcuts
       const shortcuts = {
-        v: 'select',
+        v: 'move',
         c: 'crop',
         t: 'text',
         a: 'arrow',
