@@ -346,6 +346,19 @@ class ElementSelector {
 
     this.attachSliderListeners();
     this.updateSliderPosition();
+
+    // Explicitly set slider value after DOM insertion to ensure correct position
+    const slider = this.sliderContainer.querySelector('.element-selector__slider-input');
+    if (slider) {
+      slider.value = this.currentDepth;
+      console.log('[ElementSelector] Initial slider value explicitly set:', {
+        min: this.minDepth,
+        max: this.maxDepth,
+        value: this.currentDepth,
+        sliderValue: slider.value,
+        atRightEnd: slider.value === slider.max
+      });
+    }
   }
 
   /**
