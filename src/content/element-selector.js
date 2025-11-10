@@ -477,7 +477,6 @@ class ElementSelector {
     this.hideInstructions();
 
     const instructions = DOMUtils.createElement('div', {
-      id: 'element-selector-instructions',
       className: 'element-selector__instructions',
       html: `
         <div class="element-selector__instructions-content">
