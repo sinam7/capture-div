@@ -217,7 +217,8 @@ class ElementCapturer {
 
   /**
    * Scrolls element into view ensuring it's fully visible
-   * Uses 'center' alignment to avoid sticky headers covering the target element
+   * Uses smart alignment: 'start' for large elements (to capture from top),
+   * 'center' for small elements (to avoid sticky headers)
    * @param {HTMLElement} element - The element to scroll into view
    */
   static async scrollElementIntoFullView(element) {
@@ -237,10 +238,23 @@ class ElementCapturer {
     if (!isFullyVisible) {
       console.log('[ElementCapturer] Element not fully visible, scrolling into view');
 
-      // Scroll element to center to avoid sticky headers at top
+      // Calculate real content height to determine alignment strategy
+      const contentHeight = this.getRealContentHeight(element);
+
+      // For large elements (taller than viewport), use 'start' to capture from top
+      // For small elements, use 'center' to avoid sticky headers
+      const blockAlignment = contentHeight > viewportHeight ? 'start' : 'center';
+
+      console.log('[ElementCapturer] Scroll alignment:', {
+        contentHeight,
+        viewportHeight,
+        alignment: blockAlignment,
+        reason: blockAlignment === 'start' ? 'Large element - capture from top' : 'Small element - avoid sticky headers'
+      });
+
       element.scrollIntoView({
-        behavior: 'auto', // Instant scroll for capture
-        block: 'center',   // Center alignment prevents sticky header overlap
+        behavior: 'auto',
+        block: blockAlignment,
         inline: 'start',
       });
 
