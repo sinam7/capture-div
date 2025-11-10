@@ -217,6 +217,7 @@ class ElementCapturer {
 
   /**
    * Scrolls element into view ensuring it's fully visible
+   * Uses 'center' alignment to avoid sticky headers covering the target element
    * @param {HTMLElement} element - The element to scroll into view
    */
   static async scrollElementIntoFullView(element) {
@@ -236,10 +237,10 @@ class ElementCapturer {
     if (!isFullyVisible) {
       console.log('[ElementCapturer] Element not fully visible, scrolling into view');
 
-      // Scroll element into view
+      // Scroll element to center to avoid sticky headers at top
       element.scrollIntoView({
         behavior: 'auto', // Instant scroll for capture
-        block: 'start',
+        block: 'center',   // Center alignment prevents sticky header overlap
         inline: 'start',
       });
 
