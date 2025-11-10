@@ -6,9 +6,13 @@ class MoveTool extends BaseTool {
   constructor(editor) {
     super(editor);
     this.canvasWrapper = editor.canvasWrapper;
-    this.initialScrollLeft = 0;
-    this.initialScrollTop = 0;
     this.isDragging = false;
+
+    // Initialize translate position if not exists
+    if (!this.editor.translateX) {
+      this.editor.translateX = 0;
+      this.editor.translateY = 0;
+    }
   }
 
   /**
@@ -25,13 +29,14 @@ class MoveTool extends BaseTool {
   onDrawStart(x, y) {
     this.isDragging = true;
 
-    // Store initial scroll position
-    this.initialScrollLeft = this.canvasWrapper.scrollLeft;
-    this.initialScrollTop = this.canvasWrapper.scrollTop;
+    // Store initial translate position
+    this.initialTranslateX = this.editor.translateX || 0;
+    this.initialTranslateY = this.editor.translateY || 0;
 
-    // Store initial mouse position
-    this.initialMouseX = this.startX;
-    this.initialMouseY = this.startY;
+    // Store initial mouse position in screen coordinates (not canvas coordinates)
+    const rect = this.canvas.getBoundingClientRect();
+    this.initialScreenX = this.startX * (this.editor.zoom || 1.0);
+    this.initialScreenY = this.startY * (this.editor.zoom || 1.0);
 
     // Change cursor to grabbing
     this.canvas.style.cursor = 'grabbing';
@@ -43,16 +48,20 @@ class MoveTool extends BaseTool {
   onDrawMove(x, y) {
     if (!this.isDragging) return;
 
-    // Calculate how much the mouse has moved in canvas coordinates
-    const deltaX = x - this.initialMouseX;
-    const deltaY = y - this.initialMouseY;
-
-    // Apply zoom factor to the delta for proper scrolling at different zoom levels
+    // Calculate how much the mouse has moved in screen coordinates
     const zoom = this.editor.zoom || 1.0;
+    const currentScreenX = x * zoom;
+    const currentScreenY = y * zoom;
 
-    // Update scroll position (negative because scrolling in opposite direction of drag)
-    this.canvasWrapper.scrollLeft = this.initialScrollLeft - (deltaX * zoom);
-    this.canvasWrapper.scrollTop = this.initialScrollTop - (deltaY * zoom);
+    const deltaX = currentScreenX - this.initialScreenX;
+    const deltaY = currentScreenY - this.initialScreenY;
+
+    // Update translate position
+    this.editor.translateX = this.initialTranslateX + deltaX;
+    this.editor.translateY = this.initialTranslateY + deltaY;
+
+    // Apply both scale and translate transforms
+    this.updateCanvasTransform();
   }
 
   /**
@@ -63,6 +72,17 @@ class MoveTool extends BaseTool {
 
     // Reset cursor to grab (not grabbing)
     this.canvas.style.cursor = 'grab';
+  }
+
+  /**
+   * Updates the canvas transform with both scale and translate
+   */
+  updateCanvasTransform() {
+    const zoom = this.editor.zoom || 1.0;
+    const translateX = this.editor.translateX || 0;
+    const translateY = this.editor.translateY || 0;
+
+    this.canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoom})`;
   }
 
   /**
