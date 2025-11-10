@@ -9,12 +9,6 @@ class MoveTool extends BaseTool {
     this.isDragging = false;
     this.lastClientX = 0;
     this.lastClientY = 0;
-
-    // Initialize translate position if not exists
-    if (this.editor.translateX === undefined) {
-      this.editor.translateX = 0;
-      this.editor.translateY = 0;
-    }
   }
 
   /**
@@ -68,7 +62,7 @@ class MoveTool extends BaseTool {
     this.lastClientY = e.clientY;
 
     // Apply transform
-    this.updateCanvasTransform();
+    this.editor.updateCanvasTransform();
   };
 
   /**
@@ -95,17 +89,6 @@ class MoveTool extends BaseTool {
    * Override handleDocumentMouseUp
    */
   handleDocumentMouseUp = this.handleMouseUp;
-
-  /**
-   * Updates the canvas transform with both scale and translate
-   */
-  updateCanvasTransform() {
-    const zoom = this.editor.zoom || 1.0;
-    const translateX = this.editor.translateX || 0;
-    const translateY = this.editor.translateY || 0;
-
-    this.canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoom})`;
-  }
 
   /**
    * Returns HTML for tool options

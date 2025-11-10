@@ -180,16 +180,21 @@ class ImageEditor {
   }
 
   /**
+   * Updates the canvas transform with current zoom and translate values
+   */
+  updateCanvasTransform() {
+    this.canvas.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.zoom})`;
+  }
+
+  /**
    * Sets zoom level
    * @param {number} newZoom - New zoom level
    */
   setZoom(newZoom) {
     this.zoom = Math.max(this.minZoom, Math.min(newZoom, this.maxZoom));
 
-    // Apply transform to canvas (preserve translate if it exists)
-    const translateX = this.translateX || 0;
-    const translateY = this.translateY || 0;
-    this.canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${this.zoom})`;
+    // Apply transform to canvas (preserve translate)
+    this.updateCanvasTransform();
 
     // Adjust canvas wrapper to enable proper scrolling
     // The canvas takes up space based on its actual size, but visually scales
