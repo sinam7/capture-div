@@ -15,7 +15,6 @@ class MoveTool extends BaseTool {
    * Updates cursor to move/grab cursor
    */
   updateCursor() {
-    this.canvas.classList.remove('cursor-default', 'cursor-move', 'cursor-text', 'cursor-crosshair');
     this.canvas.style.cursor = 'grab';
   }
 
