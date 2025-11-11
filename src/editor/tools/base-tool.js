@@ -236,6 +236,14 @@ class BaseTool {
   }
 
   /**
+   * Called when canvas history changes (undo/redo/restore)
+   * Tools can override to refresh any cached state tied to canvas pixels/dimensions
+   */
+  onHistoryChange() {
+    // Default no-op
+  }
+
+  /**
    * Updates cursor style
    */
   updateCursor() {

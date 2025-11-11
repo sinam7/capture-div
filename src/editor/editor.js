@@ -329,6 +329,10 @@ class ImageEditor {
   undo() {
     if (this.historyManager.undo()) {
       this.showNotification('Undo successful');
+      // Notify active tool so it can refresh any cached state tied to canvas
+      if (this.currentTool && typeof this.currentTool.onHistoryChange === 'function') {
+        this.currentTool.onHistoryChange();
+      }
     }
   }
 
@@ -338,6 +342,10 @@ class ImageEditor {
   redo() {
     if (this.historyManager.redo()) {
       this.showNotification('Redo successful');
+      // Notify active tool so it can refresh any cached state tied to canvas
+      if (this.currentTool && typeof this.currentTool.onHistoryChange === 'function') {
+        this.currentTool.onHistoryChange();
+      }
     }
   }
 
