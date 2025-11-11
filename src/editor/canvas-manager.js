@@ -308,6 +308,49 @@ class CanvasManager {
   }
 
   /**
+   * Adds padding to the canvas image
+   * @param {number} padding - Padding size in pixels (applied to all sides)
+   */
+  addPadding(padding) {
+    if (padding <= 0) return;
+
+    // Get current canvas dimensions
+    const currentWidth = this.canvas.width;
+    const currentHeight = this.canvas.height;
+
+    // Get pixel color at (0,0) for padding color
+    let paddingColor = '#ffffff'; // Fallback to white
+    try {
+      const imageData = this.ctx.getImageData(0, 0, 1, 1);
+      const data = imageData.data;
+      // Convert RGBA to hex or rgb string
+      paddingColor = `rgb(${data[0]}, ${data[1]}, ${data[2]})`;
+    } catch (e) {
+      console.warn('Could not read pixel at (0,0), using white as fallback');
+    }
+
+    // Save current canvas content
+    const currentImageData = this.ctx.getImageData(0, 0, currentWidth, currentHeight);
+
+    // Calculate new dimensions
+    const newWidth = currentWidth + (padding * 2);
+    const newHeight = currentHeight + (padding * 2);
+
+    // Resize canvas
+    this.canvas.width = newWidth;
+    this.canvas.height = newHeight;
+    this.canvas.style.width = `${newWidth}px`;
+    this.canvas.style.height = `${newHeight}px`;
+
+    // Fill with padding color
+    this.ctx.fillStyle = paddingColor;
+    this.ctx.fillRect(0, 0, newWidth, newHeight);
+
+    // Draw the original image in the center
+    this.ctx.putImageData(currentImageData, padding, padding);
+  }
+
+  /**
    * Gets canvas dimensions
    * @returns {Object} Width and height
    */
