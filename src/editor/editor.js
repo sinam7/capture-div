@@ -329,10 +329,7 @@ class ImageEditor {
   undo() {
     if (this.historyManager.undo()) {
       this.showNotification('Undo successful');
-      // Notify active tool so it can refresh any cached state tied to canvas
-      if (this.currentTool && typeof this.currentTool.onHistoryChange === 'function') {
-        this.currentTool.onHistoryChange();
-      }
+      this._notifyToolOfHistoryChange();
     }
   }
 
@@ -342,10 +339,18 @@ class ImageEditor {
   redo() {
     if (this.historyManager.redo()) {
       this.showNotification('Redo successful');
-      // Notify active tool so it can refresh any cached state tied to canvas
-      if (this.currentTool && typeof this.currentTool.onHistoryChange === 'function') {
-        this.currentTool.onHistoryChange();
-      }
+      this._notifyToolOfHistoryChange();
+    }
+  }
+
+  /**
+   * Notifies the active tool that history changed
+   * Allows tools to refresh any cached state tied to the canvas
+   * @private
+   */
+  _notifyToolOfHistoryChange() {
+    if (this.currentTool && typeof this.currentTool.onHistoryChange === 'function') {
+      this.currentTool.onHistoryChange();
     }
   }
 

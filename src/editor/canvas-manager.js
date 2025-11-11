@@ -95,7 +95,6 @@ class CanvasManager {
       }
 
       // Clear and redraw original image
-      this.clear();
       this.ctx.drawImage(this.originalImage, 0, 0);
 
       // Sync current image reference
