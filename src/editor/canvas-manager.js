@@ -83,8 +83,22 @@ class CanvasManager {
    */
   reset() {
     if (this.originalImage) {
-      this.clear();
+      // Restore canvas dimensions to the original image size
+      const originalWidth = this.originalImage.naturalWidth || this.originalImage.width;
+      const originalHeight = this.originalImage.naturalHeight || this.originalImage.height;
+
+      if (this.canvas.width !== originalWidth || this.canvas.height !== originalHeight) {
+        this.canvas.width = originalWidth;
+        this.canvas.height = originalHeight;
+        this.canvas.style.width = `${originalWidth}px`;
+        this.canvas.style.height = `${originalHeight}px`;
+      }
+
+      // Clear and redraw original image
       this.ctx.drawImage(this.originalImage, 0, 0);
+
+      // Sync current image reference
+      this.currentImage = this.originalImage;
     }
   }
 

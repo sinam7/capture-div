@@ -145,6 +145,18 @@ class CropTool extends BaseTool {
     this.drawEdgeCropOverlay();
   }
 
+  // Refresh internal caches and overlay when history (undo/redo) changes
+  onHistoryChange() {
+    // After undo/redo, the canvas dimensions and pixels might have changed.
+    // Refresh saved image data and reset transient crop state to avoid stale overlays.
+    this.savedImageData = this.canvasManager.getImageData();
+    this.edgeCropMode = true;
+    this.edgeCropRect = { top: 0, left: 0, right: 0, bottom: 0 };
+    this.draggedHandle = null;
+    this.cropRect = null;
+    this.drawEdgeCropOverlay();
+  }
+
   // Get which handle (if any) is at the given position
   getHandleAtPosition(x, y) {
     const rect = this.edgeCropRect;

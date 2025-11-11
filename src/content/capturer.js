@@ -331,7 +331,10 @@ class ElementCapturer {
         await this.waitForDOMUpdate();
 
         try {
-          imageDataUrl = await this.captureSingleViewport(element, initialRect, contentHeight);
+          // [FIX] Recalculate element position after hiding sticky elements
+          // because hiding sticky elements can cause page scroll/layout changes
+          const updatedRect = element.getBoundingClientRect();
+          imageDataUrl = await this.captureSingleViewport(element, updatedRect, contentHeight);
         } finally {
           // Always restore sticky elements after single capture
           this.restoreFixedStickyElements(hiddenElements);
@@ -383,7 +386,7 @@ class ElementCapturer {
   /**
    * [UPDATED] Captures tall element using multiple scrolls and stitches them together
    * Uses real content height to avoid gray space from CSS min-height
-   * Hides sticky elements after each scroll to handle dynamically appearing sticky elements
+   * Hides sticky elements BEFORE any scrolling to prevent layout changes
    * @param {HTMLElement} element - The element to capture
    * @param {DOMRect} initialRect - Initial element bounds
    * @param {number} contentHeight - The real content height
@@ -398,15 +401,23 @@ class ElementCapturer {
     const allHiddenElements = [];
 
     try {
-      // 1. Scroll to top of element
+      // [FIX] Hide sticky elements BEFORE scrolling to prevent layout changes
+      const hiddenElements = this.hideAllFixedStickyElements();
+      allHiddenElements.push(...hiddenElements);
+      await this.waitForDOMUpdate();
+
+      // Recalculate element position after hiding sticky elements
+      const updatedRect = element.getBoundingClientRect();
+
+      // 1. Scroll to top of element (using updated position)
       window.scrollTo({
-        top: initialRect.top + originalScrollY,
+        top: updatedRect.top + window.scrollY,
         behavior: 'instant',
       });
       await this.waitForDOMUpdate();
 
-      const elementWidth = initialRect.width;
-      const elementAbsoluteTop = initialRect.top + window.scrollY;
+      const elementWidth = updatedRect.width;
+      const elementAbsoluteTop = updatedRect.top + window.scrollY;
 
       // 2. Calculate number of captures needed
       const numCaptures = Math.ceil(contentHeight / viewportHeight);
@@ -440,17 +451,8 @@ class ElementCapturer {
         window.scrollTo({ top: scrollY, behavior: 'instant' });
         await this.waitForDOMUpdate();
 
-        // [NEW] Hide sticky elements starting from SECOND capture
-        // First capture shows sticky elements as they naturally appear
-        // Subsequent captures hide them to prevent duplication
-        if (i > 0) {
-          const newlyHiddenElements = this.hideAllFixedStickyElements();
-          allHiddenElements.push(...newlyHiddenElements);
-          await this.waitForDOMUpdate();
-          console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}, scrollY=${scrollY}, capturedHeight=${capturedHeight}, hidden ${newlyHiddenElements.length} sticky elements`);
-        } else {
-          console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures} (first capture - keeping sticky visible), scrollY=${scrollY}, capturedHeight=${capturedHeight}`);
-        }
+        // Log capture progress (sticky elements already hidden before scrolling)
+        console.log(`[ElementCapturer] Capture ${i + 1}/${numCaptures}, scrollY=${scrollY}, capturedHeight=${capturedHeight}`);
 
         // Update progress indicator
         if (window.elementSelector) {
