@@ -151,25 +151,43 @@ class ImageEditor {
   }
 
   /**
-   * Zooms in towards the center of the viewport
+   * Helper method to zoom from viewport center
+   * @param {number} newZoom - The new zoom level
+   * @private
    */
-  zoomIn() {
+  _zoomFromViewportCenter(newZoom) {
     const wrapperRect = this.canvasWrapper.getBoundingClientRect();
     const centerX = wrapperRect.left + wrapperRect.width / 2;
     const centerY = wrapperRect.top + wrapperRect.height / 2;
+    this.setZoom(newZoom, { x: centerX, y: centerY });
+  }
 
-    this.setZoom(Math.min(this.zoom + this.zoomStep, this.maxZoom), { x: centerX, y: centerY });
+  /**
+   * Helper method to center the canvas at a given zoom level
+   * @param {number} zoom - The zoom level
+   * @private
+   */
+  _centerCanvas(zoom) {
+    const { width, height } = this.canvasManager.getDimensions();
+    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+    const scaledWidth = width * zoom;
+    const scaledHeight = height * zoom;
+    this.translateX = (wrapperRect.width - scaledWidth) / 2;
+    this.translateY = (wrapperRect.height - scaledHeight) / 2;
+  }
+
+  /**
+   * Zooms in towards the center of the viewport
+   */
+  zoomIn() {
+    this._zoomFromViewportCenter(Math.min(this.zoom + this.zoomStep, this.maxZoom));
   }
 
   /**
    * Zooms out from the center of the viewport
    */
   zoomOut() {
-    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
-    const centerX = wrapperRect.left + wrapperRect.width / 2;
-    const centerY = wrapperRect.top + wrapperRect.height / 2;
-
-    this.setZoom(Math.max(this.zoom - this.zoomStep, this.minZoom), { x: centerX, y: centerY });
+    this._zoomFromViewportCenter(Math.max(this.zoom - this.zoomStep, this.minZoom));
   }
 
   /**
@@ -188,14 +206,7 @@ class ImageEditor {
     const zoomY = availableHeight / height;
     const fitZoom = Math.min(zoomX, zoomY, 1.0); // Don't zoom beyond 100% for fit
 
-    // Calculate scaled dimensions
-    const scaledWidth = width * fitZoom;
-    const scaledHeight = height * fitZoom;
-
-    // Center the canvas in the viewport (including padding)
-    this.translateX = (wrapperRect.width - scaledWidth) / 2;
-    this.translateY = (wrapperRect.height - scaledHeight) / 2;
-
+    this._centerCanvas(fitZoom);
     this.setZoom(fitZoom);
   }
 
@@ -203,13 +214,7 @@ class ImageEditor {
    * Sets zoom to actual size (100%) and centers the canvas
    */
   setActualSize() {
-    const { width, height } = this.canvasManager.getDimensions();
-    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
-
-    // Center the canvas at actual size
-    this.translateX = (wrapperRect.width - width) / 2;
-    this.translateY = (wrapperRect.height - height) / 2;
-
+    this._centerCanvas(1.0);
     this.setZoom(1.0);
   }
 
@@ -311,12 +316,6 @@ class ImageEditor {
       if (e.key === '0' && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         this.setActualSize();
-      }
-
-      // Padding shortcut
-      if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        this.addPadding();
       }
 
       // Padding shortcut
