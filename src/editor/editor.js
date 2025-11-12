@@ -198,16 +198,33 @@ class ImageEditor {
     const zoomY = availableHeight / height;
     const fitZoom = Math.min(zoomX, zoomY, 1.0); // Don't zoom beyond 100% for fit
 
-    this._centerCanvas(fitZoom);
-    this.setZoom(fitZoom);
+    // Set zoom and center the canvas
+    this.zoom = Math.max(this.minZoom, Math.min(fitZoom, this.maxZoom));
+    this._centerCanvas(this.zoom);
+    this._updateZoomDisplay();
+    this.updateCanvasTransform();
   }
 
   /**
    * Sets zoom to actual size (100%) and centers the canvas
    */
   setActualSize() {
-    this._centerCanvas(1.0);
-    this.setZoom(1.0);
+    // Set zoom and center the canvas
+    this.zoom = 1.0;
+    this._centerCanvas(this.zoom);
+    this._updateZoomDisplay();
+    this.updateCanvasTransform();
+  }
+
+  /**
+   * Updates the zoom level display
+   * @private
+   */
+  _updateZoomDisplay() {
+    const zoomLevel = document.getElementById('zoomLevel');
+    if (zoomLevel) {
+      zoomLevel.textContent = `${Math.round(this.zoom * 100)}%`;
+    }
   }
 
   /**
@@ -259,10 +276,7 @@ class ImageEditor {
     this.canvasWrapper.style.minHeight = 'auto';
 
     // Update zoom level display
-    const zoomLevel = document.getElementById('zoomLevel');
-    if (zoomLevel) {
-      zoomLevel.textContent = `${Math.round(this.zoom * 100)}%`;
-    }
+    this._updateZoomDisplay();
 
     console.log('[Editor] Zoom set to:', this.zoom);
   }
