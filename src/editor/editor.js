@@ -27,7 +27,8 @@ class ImageEditor {
     this.zoom = 1.0; // 100%
     this.minZoom = 0.1; // 10%
     this.maxZoom = 5.0; // 500%
-    this.zoomStep = 0.1; // 10% per step
+    this.zoomStep = 0.1; // 10% per step (for buttons)
+    this.zoomWheelStep = 0.01; // 1% per step (for mousewheel)
 
     // Pan/translate properties
     this.translateX = 0;
@@ -65,6 +66,9 @@ class ImageEditor {
 
       // Auto-fit large images to screen
       this.fitToScreen();
+
+      // Activate move tool by default
+      this.activateTool('move');
 
       this.hideLoading();
       this.showNotification('Image loaded successfully!', 'success');
@@ -141,8 +145,8 @@ class ImageEditor {
         e.preventDefault();
 
         const newZoom = e.deltaY < 0
-          ? Math.min(this.zoom + this.zoomStep, this.maxZoom)
-          : Math.max(this.zoom - this.zoomStep, this.minZoom);
+          ? Math.min(this.zoom + this.zoomWheelStep, this.maxZoom)
+          : Math.max(this.zoom - this.zoomWheelStep, this.minZoom);
 
         // Zoom towards the mouse cursor position
         this.setZoom(newZoom, { x: e.clientX, y: e.clientY });
