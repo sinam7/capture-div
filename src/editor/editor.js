@@ -205,9 +205,9 @@ class ImageEditor {
     // Set zoom and position
     this.zoom = Math.max(this.minZoom, Math.min(fitZoom, this.maxZoom));
 
-    // Position: (wrapperWidth / 2) - (canvasWidth * zoom)
+    // Position: (wrapperWidth / 2) - (canvasWidth * zoom / 2)
     const scaledWidth = width * this.zoom;
-    this.translateX = (wrapperRect.width / 2) - scaledWidth;
+    this.translateX = (wrapperRect.width / 2) - (scaledWidth / 2);
     this.translateY = 0;
 
     this._updateZoomDisplay();
