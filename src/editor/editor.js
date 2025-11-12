@@ -200,14 +200,16 @@ class ImageEditor {
     // Calculate zoom to fit
     const zoomX = availableWidth / width;
     const zoomY = availableHeight / height;
-    const fitZoom = Math.min(zoomX, zoomY, 1.0); // Don't zoom beyond 100% for fit
+    const fitZoom = Math.min(zoomX, zoomY);
 
     // Set zoom and position
     this.zoom = Math.max(this.minZoom, Math.min(fitZoom, this.maxZoom));
 
-    // Position: (wrapperWidth / 2) - (canvasWidth * zoom / 2)
+    // TODO: fix this; zero translate is not the center of the canvas if it's not 100% zoom.
     const scaledWidth = width * this.zoom;
-    this.translateX = (wrapperRect.width / 2) - (scaledWidth / 2);
+    // TODO: fix this; zero translate is not the center of the canvas if it's not 100% zoom.
+    this.translateX = (wrapperRect.width / 2) - (width / 2) + (scaledWidth / 2) - 20; // applying left padding
+
     this.translateY = 0;
 
     this._updateZoomDisplay();
