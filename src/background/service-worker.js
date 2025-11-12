@@ -35,12 +35,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'openEditor') {
-    handleOpenEditor(message.imageData)
-      .then(() => sendResponse({ success: true }))
-      .catch((error) => {
+    // Handle large image data stored in chrome.storage.local
+    (async () => {
+      try {
+        let imageData = message.imageData;
+
+        // If storageKey is provided, retrieve image data from storage
+        if (message.storageKey) {
+          console.log(`[ServiceWorker] Retrieving large image data from storage: ${message.storageKey}`);
+          const result = await chrome.storage.local.get(message.storageKey);
+          imageData = result[message.storageKey];
+
+          if (!imageData) {
+            throw new Error(`Failed to retrieve image data from storage key: ${message.storageKey}`);
+          }
+        }
+
+        await handleOpenEditor(imageData);
+        sendResponse({ success: true });
+      } catch (error) {
         console.error('Failed to open editor:', error);
         sendResponse({ success: false, error: error.message });
-      });
+      }
+    })();
     return true;
   }
 });
