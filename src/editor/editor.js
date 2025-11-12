@@ -378,7 +378,10 @@ class ImageEditor {
    * Adds padding to the canvas image
    */
   addPadding() {
-    const paddingInput = prompt('Enter padding size in pixels (e.g., 20):', '20');
+    const DEFAULT_PADDING = 20;
+    const MAX_PADDING = 500;
+
+    const paddingInput = prompt(`Enter padding size in pixels (e.g., ${DEFAULT_PADDING}):`, `${DEFAULT_PADDING}`);
 
     if (paddingInput === null) {
       return; // User cancelled
@@ -391,8 +394,8 @@ class ImageEditor {
       return;
     }
 
-    if (padding > 500) {
-      this.showNotification('Padding size is too large (max: 500px)', 'error');
+    if (padding > MAX_PADDING) {
+      this.showNotification(`Padding size is too large (max: ${MAX_PADDING}px)`, 'error');
       return;
     }
 

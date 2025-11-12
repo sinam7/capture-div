@@ -323,8 +323,10 @@ class CanvasManager {
     try {
       const imageData = this.ctx.getImageData(0, 0, 1, 1);
       const data = imageData.data;
-      // Convert RGBA to hex or rgb string
-      paddingColor = `rgb(${data[0]}, ${data[1]}, ${data[2]})`;
+      // Check if pixel is not transparent before using its color
+      if (data[3] > 0) {
+        paddingColor = `rgb(${data[0]}, ${data[1]}, ${data[2]})`;
+      }
     } catch (e) {
       console.warn('Could not read pixel at (0,0), using white as fallback');
     }
