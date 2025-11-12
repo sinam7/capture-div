@@ -392,7 +392,7 @@ class ElementCapturer {
    */
   static saveScrollableAncestors(element) {
     const scrollableAncestors = [];
-    let current = element.parentElement;
+    let current = element;
 
     while (current && current !== document.body && current !== document.documentElement) {
       const hasHorizontalScroll = current.scrollWidth > current.clientWidth;
