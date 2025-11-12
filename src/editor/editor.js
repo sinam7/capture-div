@@ -319,6 +319,12 @@ class ImageEditor {
         this.addPadding();
       }
 
+      // Padding shortcut
+      if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        this.addPadding();
+      }
+
       // Tool shortcuts
       const shortcuts = {
         v: 'move',
