@@ -133,37 +133,47 @@ class ImageEditor {
     zoomInBtn?.addEventListener('click', () => this.zoomIn());
     zoomOutBtn?.addEventListener('click', () => this.zoomOut());
     fitScreenBtn?.addEventListener('click', () => this.fitToScreen());
-    actualSizeBtn?.addEventListener('click', () => this.setZoom(1.0));
+    actualSizeBtn?.addEventListener('click', () => this.setActualSize());
 
-    // Mouse wheel zoom
+    // Mouse wheel zoom - zoom towards cursor position
     this.canvasWrapper.addEventListener('wheel', (e) => {
       if (e.ctrlKey) {
         e.preventDefault();
-        if (e.deltaY < 0) {
-          this.zoomIn();
-        } else {
-          this.zoomOut();
-        }
+
+        const newZoom = e.deltaY < 0
+          ? Math.min(this.zoom + this.zoomStep, this.maxZoom)
+          : Math.max(this.zoom - this.zoomStep, this.minZoom);
+
+        // Zoom towards the mouse cursor position
+        this.setZoom(newZoom, { x: e.clientX, y: e.clientY });
       }
     });
   }
 
   /**
-   * Zooms in
+   * Zooms in towards the center of the viewport
    */
   zoomIn() {
-    this.setZoom(Math.min(this.zoom + this.zoomStep, this.maxZoom));
+    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+    const centerX = wrapperRect.left + wrapperRect.width / 2;
+    const centerY = wrapperRect.top + wrapperRect.height / 2;
+
+    this.setZoom(Math.min(this.zoom + this.zoomStep, this.maxZoom), { x: centerX, y: centerY });
   }
 
   /**
-   * Zooms out
+   * Zooms out from the center of the viewport
    */
   zoomOut() {
-    this.setZoom(Math.max(this.zoom - this.zoomStep, this.minZoom));
+    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+    const centerX = wrapperRect.left + wrapperRect.width / 2;
+    const centerY = wrapperRect.top + wrapperRect.height / 2;
+
+    this.setZoom(Math.max(this.zoom - this.zoomStep, this.minZoom), { x: centerX, y: centerY });
   }
 
   /**
-   * Fits canvas to screen
+   * Fits canvas to screen and centers it
    */
   fitToScreen() {
     const { width, height } = this.canvasManager.getDimensions();
@@ -190,6 +200,20 @@ class ImageEditor {
   }
 
   /**
+   * Sets zoom to actual size (100%) and centers the canvas
+   */
+  setActualSize() {
+    const { width, height } = this.canvasManager.getDimensions();
+    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+
+    // Center the canvas at actual size
+    this.translateX = (wrapperRect.width - width) / 2;
+    this.translateY = (wrapperRect.height - height) / 2;
+
+    this.setZoom(1.0);
+  }
+
+  /**
    * Updates the canvas transform with current zoom and translate values
    */
   updateCanvasTransform() {
@@ -197,22 +221,38 @@ class ImageEditor {
   }
 
   /**
-   * Sets zoom level
+   * Sets zoom level with optional focal point
    * @param {number} newZoom - New zoom level
+   * @param {Object} focalPoint - Optional {x, y} point to zoom towards (in viewport coordinates)
    */
-  setZoom(newZoom) {
+  setZoom(newZoom, focalPoint = null) {
+    const oldZoom = this.zoom;
     this.zoom = Math.max(this.minZoom, Math.min(newZoom, this.maxZoom));
 
-    // Apply transform to canvas (preserve translate)
+    // If we have a focal point, adjust translate to keep that point stable
+    if (focalPoint && oldZoom !== this.zoom) {
+      const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+
+      // Get focal point relative to wrapper
+      const focalX = focalPoint.x - wrapperRect.left;
+      const focalY = focalPoint.y - wrapperRect.top;
+
+      // Calculate the canvas point under the focal point before zoom
+      // Formula: canvasPoint = (viewportPoint - translate) / scale
+      const canvasX = (focalX - this.translateX) / oldZoom;
+      const canvasY = (focalY - this.translateY) / oldZoom;
+
+      // After zoom, adjust translate so the same canvas point stays under the focal point
+      // Formula: translate = viewportPoint - (canvasPoint * newScale)
+      this.translateX = focalX - (canvasX * this.zoom);
+      this.translateY = focalY - (canvasY * this.zoom);
+    }
+
+    // Apply transform to canvas
     this.updateCanvasTransform();
 
     // Adjust canvas wrapper to enable proper scrolling
-    // The canvas takes up space based on its actual size, but visually scales
-    // We need to ensure the wrapper can scroll when canvas is larger than viewport
     const { width, height } = this.canvasManager.getDimensions();
-
-    // Set min-width/min-height on wrapper to enable scrolling for large canvases
-    // This ensures scroll bars appear when scaled canvas exceeds viewport
     this.canvasWrapper.style.minWidth = 'auto';
     this.canvasWrapper.style.minHeight = 'auto';
 
@@ -265,7 +305,7 @@ class ImageEditor {
 
       if (e.key === '0' && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
-        this.setZoom(1.0);
+        this.setActualSize();
       }
 
       // Padding shortcut
