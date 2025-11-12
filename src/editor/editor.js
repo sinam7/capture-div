@@ -231,21 +231,26 @@ class ImageEditor {
 
     // If we have a focal point, adjust translate to keep that point stable
     if (focalPoint && oldZoom !== this.zoom) {
-      const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+      // Get canvas position in screen coordinates (before transform)
+      const canvasRect = this.canvas.getBoundingClientRect();
 
-      // Get focal point relative to wrapper
-      const focalX = focalPoint.x - wrapperRect.left;
-      const focalY = focalPoint.y - wrapperRect.top;
+      // Get focal point relative to canvas's current position
+      const focalX = focalPoint.x - canvasRect.left;
+      const focalY = focalPoint.y - canvasRect.top;
 
       // Calculate the canvas point under the focal point before zoom
-      // Formula: canvasPoint = (viewportPoint - translate) / scale
-      const canvasX = (focalX - this.translateX) / oldZoom;
-      const canvasY = (focalY - this.translateY) / oldZoom;
+      // Since we have transform-origin: top left, a point (cx, cy) on canvas maps to screen as:
+      // screenX = cx * oldZoom, screenY = cy * oldZoom (relative to canvas position)
+      const canvasX = focalX / oldZoom;
+      const canvasY = focalY / oldZoom;
 
-      // After zoom, adjust translate so the same canvas point stays under the focal point
-      // Formula: translate = viewportPoint - (canvasPoint * newScale)
-      this.translateX = focalX - (canvasX * this.zoom);
-      this.translateY = focalY - (canvasY * this.zoom);
+      // Calculate how much the focal point will move when we change zoom
+      const newFocalX = canvasX * this.zoom;
+      const newFocalY = canvasY * this.zoom;
+
+      // Adjust translate to compensate for the movement
+      this.translateX += (focalX - newFocalX);
+      this.translateY += (focalY - newFocalY);
     }
 
     // Apply transform to canvas
