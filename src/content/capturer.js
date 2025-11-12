@@ -17,6 +17,11 @@ class ElementCapturer {
       throw new Error('No element provided for capture');
     }
 
+    // Save original scroll positions BEFORE any scrolling operations
+    const originalWindowScrollX = window.scrollX;
+    const originalWindowScrollY = window.scrollY;
+    const originalScrollableAncestors = this.saveScrollableAncestors(element);
+
     try {
       // Step 1: Remove all overlays and UI elements
       await this.hideAllOverlays();
@@ -36,6 +41,10 @@ class ElementCapturer {
       // Ensure overlays are restored on failure
       await this.restoreOverlays();
       throw error;
+    } finally {
+      // Always restore original scroll positions
+      window.scrollTo({ left: originalWindowScrollX, top: originalWindowScrollY, behavior: 'instant' });
+      this.restoreScrollableAncestors(originalScrollableAncestors);
     }
   }
 
@@ -70,9 +79,9 @@ class ElementCapturer {
   /**
    * [NEW] Hides all fixed/sticky positioned elements on the page
    * Prevents them from appearing in screenshots or duplicating during stitching
-   * Uses multiple methods to ensure elements are completely hidden
    * Only hides elements that are actually "floating" (stuck to viewport edges)
-   * @returns {Array} Array of {element, originalDisplay, originalVisibility, originalPosition}
+   * Uses display: none to hide (preserves position attributes for correct restoration)
+   * @returns {Array} Array of {element, originalDisplay}
    */
   static hideAllFixedStickyElements() {
     console.log('[ElementCapturer] Hiding ALL fixed/sticky positioned elements');
@@ -96,13 +105,10 @@ class ElementCapturer {
           hiddenElements.push({
             element: el,
             originalDisplay: el.style.display,
-            originalVisibility: el.style.visibility,
-            originalPosition: el.style.position,
           });
 
+          // Only use display: none to hide (don't touch position)
           el.style.display = 'none';
-          el.style.visibility = 'hidden';
-          el.style.position = 'static';
           return;
         }
 
@@ -123,13 +129,10 @@ class ElementCapturer {
             hiddenElements.push({
               element: el,
               originalDisplay: el.style.display,
-              originalVisibility: el.style.visibility,
-              originalPosition: el.style.position,
             });
 
+            // Only use display: none to hide (don't touch position)
             el.style.display = 'none';
-            el.style.visibility = 'hidden';
-            el.style.position = 'static';
 
             console.log('[ElementCapturer] Hidden stuck sticky element:', {
               tag: el.tagName,
@@ -162,10 +165,9 @@ class ElementCapturer {
    */
   static restoreFixedStickyElements(hiddenElements) {
     console.log(`[ElementCapturer] Restoring ${hiddenElements.length} elements`);
-    hiddenElements.forEach(({ element, originalDisplay, originalVisibility, originalPosition }) => {
+    hiddenElements.forEach(({ element, originalDisplay }) => {
+      // Restore original display value (empty string removes inline style)
       element.style.display = originalDisplay || '';
-      element.style.visibility = originalVisibility || '';
-      element.style.position = originalPosition || '';
     });
   }
 
@@ -384,6 +386,49 @@ class ElementCapturer {
   }
 
   /**
+   * Finds all scrollable ancestor elements and saves their scroll positions
+   * @param {HTMLElement} element - Starting element
+   * @returns {Array} Array of {element, scrollLeft, scrollTop}
+   */
+  static saveScrollableAncestors(element) {
+    const scrollableAncestors = [];
+    let current = element;
+
+    while (current && current !== document.body && current !== document.documentElement) {
+      const hasHorizontalScroll = current.scrollWidth > current.clientWidth;
+      const hasVerticalScroll = current.scrollHeight > current.clientHeight;
+      const scrollLeft = current.scrollLeft;
+      const scrollTop = current.scrollTop;
+
+      // Save if element has scroll offset or is scrollable
+      if (hasHorizontalScroll || hasVerticalScroll || scrollLeft !== 0 || scrollTop !== 0) {
+        scrollableAncestors.push({
+          element: current,
+          scrollLeft: scrollLeft,
+          scrollTop: scrollTop
+        });
+      }
+
+      current = current.parentElement;
+    }
+
+    console.log(`[ElementCapturer] Saved ${scrollableAncestors.length} scrollable ancestors`);
+    return scrollableAncestors;
+  }
+
+  /**
+   * Restores scroll positions of ancestor elements
+   * @param {Array} scrollableAncestors - Array of {element, scrollLeft, scrollTop}
+   */
+  static restoreScrollableAncestors(scrollableAncestors) {
+    console.log(`[ElementCapturer] Restoring ${scrollableAncestors.length} scrollable ancestors`);
+    scrollableAncestors.forEach(({ element, scrollLeft, scrollTop }) => {
+      element.scrollLeft = scrollLeft;
+      element.scrollTop = scrollTop;
+    });
+  }
+
+  /**
    * [UPDATED] Captures tall element using multiple scrolls and stitches them together
    * Uses real content height to avoid gray space from CSS min-height
    * Hides sticky elements BEFORE any scrolling to prevent layout changes
@@ -395,7 +440,11 @@ class ElementCapturer {
    */
   static async captureWithStitching(element, initialRect, contentHeight, viewportHeight) {
     const dpr = window.devicePixelRatio;
+    const originalScrollX = window.scrollX;
     const originalScrollY = window.scrollY;
+
+    // Save scrollable ancestor elements' scroll positions
+    const scrollableAncestors = this.saveScrollableAncestors(element);
 
     // Track all hidden elements across all scroll positions
     const allHiddenElements = [];
@@ -411,9 +460,12 @@ class ElementCapturer {
 
       // 1. Scroll to top of element (using updated position)
       window.scrollTo({
+        left: originalScrollX,
         top: updatedRect.top + window.scrollY,
         behavior: 'instant',
       });
+      // Restore parent container scroll positions in case they were affected
+      this.restoreScrollableAncestors(scrollableAncestors);
       await this.waitForDOMUpdate();
 
       const elementWidth = updatedRect.width;
@@ -448,7 +500,9 @@ class ElementCapturer {
           scrollY = elementAbsoluteTop + capturedHeight;
         }
 
-        window.scrollTo({ top: scrollY, behavior: 'instant' });
+        window.scrollTo({ left: originalScrollX, top: scrollY, behavior: 'instant' });
+        // Restore parent container scroll positions in case they were affected
+        this.restoreScrollableAncestors(scrollableAncestors);
         await this.waitForDOMUpdate();
 
         // Log capture progress (sticky elements already hidden before scrolling)
@@ -514,21 +568,15 @@ class ElementCapturer {
         await this.delay(100);
       }
 
-      // Restore original scroll position
-      window.scrollTo({ top: originalScrollY, behavior: 'instant' });
-      await this.waitForDOMUpdate();
-
-      // [NEW] Restore all hidden elements from all scroll positions
-      this.restoreFixedStickyElements(allHiddenElements);
-
       console.log('[ElementCapturer] Stitching complete');
       return finalCanvas.toDataURL('image/png');
 
-    } catch (error) {
-      // Restore scroll and all hidden elements on error
-      window.scrollTo({ top: originalScrollY, behavior: 'instant' });
+    } finally {
+      // Always restore scroll positions (window and scrollable ancestors) and hidden elements
+      window.scrollTo({ left: originalScrollX, top: originalScrollY, behavior: 'instant' });
+      this.restoreScrollableAncestors(scrollableAncestors);
       this.restoreFixedStickyElements(allHiddenElements);
-      throw error;
+      await this.waitForDOMUpdate();
     }
   }
 

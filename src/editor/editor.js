@@ -178,6 +178,14 @@ class ImageEditor {
     const zoomY = availableHeight / height;
     const fitZoom = Math.min(zoomX, zoomY, 1.0); // Don't zoom beyond 100% for fit
 
+    // Calculate scaled dimensions
+    const scaledWidth = width * fitZoom;
+    const scaledHeight = height * fitZoom;
+
+    // Center the canvas in the viewport (including padding)
+    this.translateX = (wrapperRect.width - scaledWidth) / 2;
+    this.translateY = (wrapperRect.height - scaledHeight) / 2;
+
     this.setZoom(fitZoom);
   }
 
