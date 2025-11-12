@@ -151,18 +151,6 @@ class ImageEditor {
   }
 
   /**
-   * Helper method to zoom from viewport center
-   * @param {number} newZoom - The new zoom level
-   * @private
-   */
-  _zoomFromViewportCenter(newZoom) {
-    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
-    const centerX = wrapperRect.left + wrapperRect.width / 2;
-    const centerY = wrapperRect.top + wrapperRect.height / 2;
-    this.setZoom(newZoom, { x: centerX, y: centerY });
-  }
-
-  /**
    * Helper method to center the canvas at a given zoom level
    * @param {number} zoom - The zoom level
    * @private
@@ -180,14 +168,18 @@ class ImageEditor {
    * Zooms in towards the center of the viewport
    */
   zoomIn() {
-    this._zoomFromViewportCenter(Math.min(this.zoom + this.zoomStep, this.maxZoom));
+    const newZoom = Math.min(this.zoom + this.zoomStep, this.maxZoom);
+    this._centerCanvas(newZoom);
+    this.setZoom(newZoom);
   }
 
   /**
    * Zooms out from the center of the viewport
    */
   zoomOut() {
-    this._zoomFromViewportCenter(Math.max(this.zoom - this.zoomStep, this.minZoom));
+    const newZoom = Math.max(this.zoom - this.zoomStep, this.minZoom);
+    this._centerCanvas(newZoom);
+    this.setZoom(newZoom);
   }
 
   /**
