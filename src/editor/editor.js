@@ -169,8 +169,10 @@ class ImageEditor {
    */
   zoomIn() {
     const newZoom = Math.min(this.zoom + this.zoomStep, this.maxZoom);
-    this._centerCanvas(newZoom);
-    this.setZoom(newZoom);
+    this.zoom = newZoom;
+    this._centerCanvas(this.zoom);
+    this._updateZoomDisplay();
+    this.updateCanvasTransform();
   }
 
   /**
@@ -178,8 +180,10 @@ class ImageEditor {
    */
   zoomOut() {
     const newZoom = Math.max(this.zoom - this.zoomStep, this.minZoom);
-    this._centerCanvas(newZoom);
-    this.setZoom(newZoom);
+    this.zoom = newZoom;
+    this._centerCanvas(this.zoom);
+    this._updateZoomDisplay();
+    this.updateCanvasTransform();
   }
 
   /**
