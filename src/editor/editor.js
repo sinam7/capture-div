@@ -112,11 +112,13 @@ class ImageEditor {
     const copyBtn = document.getElementById('copyBtn');
     const downloadPngBtn = document.getElementById('downloadPngBtn');
     const downloadJpgBtn = document.getElementById('downloadJpgBtn');
+    const paddingBtn = document.getElementById('paddingBtn');
 
     resetBtn?.addEventListener('click', () => this.reset());
     copyBtn?.addEventListener('click', () => this.copyToClipboard());
     downloadPngBtn?.addEventListener('click', () => this.download('png'));
     downloadJpgBtn?.addEventListener('click', () => this.download('jpg'));
+    paddingBtn?.addEventListener('click', () => this.addPadding());
   }
 
   /**
@@ -258,6 +260,12 @@ class ImageEditor {
         this.setZoom(1.0);
       }
 
+      // Padding shortcut
+      if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        this.addPadding();
+      }
+
       // Tool shortcuts
       const shortcuts = {
         v: 'move',
@@ -364,6 +372,43 @@ class ImageEditor {
       this.historyManager.init();
       this.showNotification('Image reset to original');
     }
+  }
+
+  /**
+   * Adds padding to the canvas image
+   */
+  addPadding() {
+    const DEFAULT_PADDING = 20;
+    const MAX_PADDING = 500;
+
+    const paddingInput = prompt(`Enter padding size in pixels (e.g., ${DEFAULT_PADDING}):`, `${DEFAULT_PADDING}`);
+
+    if (paddingInput === null) {
+      return; // User cancelled
+    }
+
+    const padding = parseInt(paddingInput, 10);
+
+    if (isNaN(padding) || padding <= 0) {
+      this.showNotification('Please enter a valid positive number', 'error');
+      return;
+    }
+
+    if (padding > MAX_PADDING) {
+      this.showNotification(`Padding size is too large (max: ${MAX_PADDING}px)`, 'error');
+      return;
+    }
+
+    // Save current state to history before adding padding
+    this.historyManager.saveState();
+
+    // Add padding
+    this.canvasManager.addPadding(padding);
+
+    // Update image info display
+    this.updateImageInfo();
+
+    this.showNotification(`Added ${padding}px padding`, 'success');
   }
 
   /**
