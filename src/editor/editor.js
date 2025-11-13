@@ -209,12 +209,8 @@ class ImageEditor {
     // Set zoom and position
     this.zoom = Math.max(this.minZoom, Math.min(fitZoom, this.maxZoom));
 
-    // TODO: fix this; zero translate is not the center of the canvas if it's not 100% zoom.
-    const scaledWidth = width * this.zoom;
-    // TODO: fix this; zero translate is not the center of the canvas if it's not 100% zoom.
-    this.translateX = (wrapperRect.width / 2) - (width / 2) + (scaledWidth / 2) - 20; // applying left padding
-
-    this.translateY = 0;
+    // Center the canvas at the new zoom level
+    this._centerCanvas(this.zoom);
 
     this._updateZoomDisplay();
     this.updateCanvasTransform();
@@ -224,10 +220,11 @@ class ImageEditor {
    * Sets zoom to actual size (100%) and centers the canvas
    */
   setActualSize() {
-    // Set zoom to 100% and position at origin
+    // Set zoom to 100%
     this.zoom = 1.0;
-    this.translateX = 0;
-    this.translateY = 0;
+
+    // Center the canvas at 100% zoom
+    this._centerCanvas(this.zoom);
 
     this._updateZoomDisplay();
     this.updateCanvasTransform();
