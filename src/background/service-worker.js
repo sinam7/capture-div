@@ -74,6 +74,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
         }
 
+        // Ensure imageData is valid before proceeding
+        if (!imageData) {
+          throw new Error('No image data provided to open the editor.');
+        }
+
         await handleOpenEditor(imageData);
         sendResponse({ success: true });
       } catch (error) {
