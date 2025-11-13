@@ -3,12 +3,35 @@
  * Handles screenshot capture coordination and editor page opening
  */
 
+// Import messaging utilities for cleanup
+importScripts('../utils/messaging.js');
+
 // Listen for extension installation
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     console.log('Element Screenshot Editor installed');
   } else if (details.reason === 'update') {
     console.log('Element Screenshot Editor updated');
+  }
+
+  // Set up periodic cleanup alarm (runs every 5 minutes)
+  chrome.alarms.create('cleanupCaptureData', { periodInMinutes: 5 });
+  console.log('Scheduled periodic cleanup of old capture data');
+});
+
+// Listen for alarms
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'cleanupCaptureData') {
+    // Clean up capture data older than 5 minutes
+    Messaging.cleanupOldCaptureData(5 * 60 * 1000)
+      .then((count) => {
+        if (count > 0) {
+          console.log(`[ServiceWorker] Cleaned up ${count} old capture entries`);
+        }
+      })
+      .catch((error) => {
+        console.error('[ServiceWorker] Cleanup failed:', error);
+      });
   }
 });
 
@@ -35,12 +58,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'openEditor') {
-    handleOpenEditor(message.imageData)
-      .then(() => sendResponse({ success: true }))
-      .catch((error) => {
+    // Handle large image data stored in chrome.storage.local
+    (async () => {
+      try {
+        let imageData = message.imageData;
+
+        // If storageKey is provided, retrieve image data from storage
+        if (message.storageKey) {
+          console.log(`[ServiceWorker] Retrieving large image data from storage: ${message.storageKey}`);
+          const result = await chrome.storage.local.get(message.storageKey);
+          imageData = result[message.storageKey];
+
+          if (!imageData) {
+            throw new Error(`Failed to retrieve image data from storage key: ${message.storageKey}`);
+          }
+        }
+
+        // Ensure imageData is valid before proceeding
+        if (!imageData) {
+          throw new Error('No image data provided to open the editor.');
+        }
+
+        await handleOpenEditor(imageData);
+        sendResponse({ success: true });
+      } catch (error) {
         console.error('Failed to open editor:', error);
         sendResponse({ success: false, error: error.message });
-      });
+      }
+    })();
     return true;
   }
 });
