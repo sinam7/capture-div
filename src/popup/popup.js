@@ -98,34 +98,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 5000);
   }
 
-  /**
-   * Populate UI text with localized messages
-   */
-  function applyI18nMessages() {
-    const elements = document.querySelectorAll('[data-i18n]');
-    elements.forEach((element) => {
-      const key = element.getAttribute('data-i18n');
-      if (!key) {
-        return;
-      }
-
-      const message = chrome.i18n.getMessage(key);
-      if (!message) {
-        return;
-      }
-
-      const attribute = element.getAttribute('data-i18n-attr');
-      if (attribute) {
-        element.setAttribute(attribute, message);
-        return;
-      }
-
-      if (element.dataset.i18nHtml === 'true') {
-        element.innerHTML = message;
-        return;
-      }
-
-      element.textContent = message;
-    });
-  }
 });

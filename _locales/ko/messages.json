@@ -434,7 +434,7 @@
     "description": "자르기 안내 문구"
   },
   "editorOptionsCropMethod1Label": {
-    "message": "방법 1: 가장자리 다듬기 (Office 스타일)",
+    "message": "방법 1: 가장자리 자르기",
     "description": "자르기 방법 1 레이블"
   },
   "editorOptionsCropMethod1Step1": {

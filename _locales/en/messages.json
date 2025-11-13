@@ -434,7 +434,7 @@
     "description": "Intro text for crop options"
   },
   "editorOptionsCropMethod1Label": {
-    "message": "Method 1: Edge Trim (Office-style)",
+    "message": "Method 1: Edge Trim",
     "description": "Label for crop method 1"
   },
   "editorOptionsCropMethod1Step1": {
