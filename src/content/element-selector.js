@@ -198,9 +198,19 @@ class ElementSelector {
 
     // Enter key - capture selected element
     if (event.key === 'Enter' && this.selectedElement) {
-      console.log('[ElementSelector] Enter key pressed - capturing element');
-      this.captureElement();
+      console.log('[ElementSelector] Enter key pressed - capturing element', {
+        selectedElement: this.selectedElement,
+        hasSlider: !!this.sliderContainer,
+        target: event.target,
+      });
       event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      // Call captureElement and log if it returns
+      const result = this.captureElement();
+      console.log('[ElementSelector] captureElement called, result:', result);
+      return;
     }
 
     // Arrow keys - adjust depth when element is selected
@@ -532,13 +542,19 @@ class ElementSelector {
    * Captures the selected element as a screenshot
    */
   async captureElement() {
-    console.log('[ElementSelector] captureElement() called');
+    console.log('[ElementSelector] captureElement() called', {
+      hasSelectedElement: !!this.selectedElement,
+      selectedElementTag: this.selectedElement?.tagName,
+      hasSliderContainer: !!this.sliderContainer,
+    });
+
     if (!this.selectedElement) {
-      console.log('[ElementSelector] No element selected, aborting capture');
+      console.error('[ElementSelector] No element selected, aborting capture');
       return;
     }
 
     const captureBtn = this.sliderContainer?.querySelector('.element-selector__btn--capture');
+    console.log('[ElementSelector] captureBtn found:', !!captureBtn);
 
     try {
       // Show loading state
