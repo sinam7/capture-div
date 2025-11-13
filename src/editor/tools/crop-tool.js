@@ -422,26 +422,43 @@ class CropTool extends BaseTool {
   }
 
   getOptionsHTML() {
+    const title = getMessage('editorOptionsCropTitle') || 'Crop Tool';
+    const intro = getMessage('editorOptionsCropIntro') || 'Two ways to crop:';
+    const method1Label =
+      getMessage('editorOptionsCropMethod1Label') || 'Method 1: Edge Trim (Office-style)';
+    const method1Step1 =
+      getMessage('editorOptionsCropMethod1Step1') || 'Drag edge handles to trim borders';
+    const method1Step2 =
+      getMessage('editorOptionsCropMethod1Step2') || 'Click Apply to confirm';
+    const applyButtonLabel =
+      getMessage('editorOptionsCropApplyButton') || 'Apply Edge Crop';
+    const method2Label =
+      getMessage('editorOptionsCropMethod2Label') || 'Method 2: Area Selection';
+    const method2Step1 =
+      getMessage('editorOptionsCropMethod2Step1') || 'Click and drag to select area';
+    const method2Step2 =
+      getMessage('editorOptionsCropMethod2Step2') || 'Release to apply immediately';
+
     return `
-      <h3>Crop Tool</h3>
+      <h3>${title}</h3>
       <p style="font-size: 12px; color: #666; margin-bottom: 8px;">
-        Two ways to crop:
+        ${intro}
       </p>
       <div class="editor-options__field">
-        <label>Method 1: Edge Trim (Office-style)</label>
+        <label>${method1Label}</label>
         <ul style="font-size: 11px; color: #666; padding-left: 16px; margin: 4px 0;">
-          <li>Drag edge handles to trim borders</li>
-          <li>Click Apply to confirm</li>
+          <li>${method1Step1}</li>
+          <li>${method1Step2}</li>
         </ul>
         <button id="applyEdgeCrop" style="width: 100%; margin-top: 8px; padding: 6px; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer;">
-          Apply Edge Crop
+          ${applyButtonLabel}
         </button>
       </div>
       <div class="editor-options__field" style="margin-top: 12px;">
-        <label>Method 2: Area Selection</label>
+        <label>${method2Label}</label>
         <ul style="font-size: 11px; color: #666; padding-left: 16px; margin: 4px 0;">
-          <li>Click and drag to select area</li>
-          <li>Release to apply immediately</li>
+          <li>${method2Step1}</li>
+          <li>${method2Step2}</li>
         </ul>
       </div>
     `;

@@ -93,14 +93,23 @@ class MoveTool extends BaseTool {
    * Returns HTML for tool options
    */
   getOptionsHTML() {
+    const title = getMessage('editorOptionsMoveTitle') || 'Move Tool';
+    const description =
+      getMessage('editorOptionsMoveDescription') || 'Click and drag to pan the canvas.';
+    const tips = [
+      getMessage('editorOptionsMoveTip1') || 'Drag to move the view',
+      getMessage('editorOptionsMoveTip2') || 'Use with zoom for easier navigation',
+      getMessage('editorOptionsMoveTip3') || 'Press ESC to deselect',
+    ];
+
     return `
       <div class="editor-options__content">
-        <h3>Move Tool</h3>
-        <p>Click and drag to pan the canvas.</p>
+        <h3>${title}</h3>
+        <p>${description}</p>
         <ul>
-          <li>Drag to move the view</li>
-          <li>Use with zoom for easier navigation</li>
-          <li>Press ESC to deselect</li>
+          <li>${tips[0]}</li>
+          <li>${tips[1]}</li>
+          <li>${tips[2]}</li>
         </ul>
       </div>
     `;

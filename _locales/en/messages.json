@@ -62,7 +62,41 @@
     "message": "Select child",
     "description": "Down/Right arrow shortcut description"
   },
+  "shortcutEnter": {
+    "message": "Capture selected element",
+    "description": "Enter key shortcut description"
+  },
 
+  "statusNoActiveTab": {
+    "message": "No active tab found",
+    "description": "Status message when no active tab is available"
+  },
+  "statusRestrictedPage": {
+    "message": "Cannot capture on this page. Try a regular website instead.",
+    "description": "Status message when trying to capture on restricted pages"
+  },
+  "statusSelectionActivated": {
+    "message": "Selection mode activated!",
+    "description": "Status message shown when selection mode starts successfully"
+  },
+  "statusContentScriptMissing": {
+    "message": "Content script not loaded. Please refresh the page and try again.",
+    "description": "Status message when content script is missing"
+  },
+  "statusStartSelectionFailed": {
+    "message": "Failed to start selection: $1",
+    "description": "Status message when starting selection fails",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+
+  "toolMove": {
+    "message": "Move",
+    "description": "Move tool"
+  },
   "toolSelect": {
     "message": "Select",
     "description": "Select tool"
@@ -70,6 +104,10 @@
   "toolCrop": {
     "message": "Crop",
     "description": "Crop tool"
+  },
+  "toolPadding": {
+    "message": "Padding",
+    "description": "Padding action"
   },
   "toolText": {
     "message": "Text",
@@ -155,6 +193,10 @@
     "description": "Download JPG button"
   },
 
+  "tooltipMove": {
+    "message": "Move (V)",
+    "description": "Move tool tooltip"
+  },
   "tooltipSelect": {
     "message": "Select (V)",
     "description": "Select tool tooltip"
@@ -162,6 +204,10 @@
   "tooltipCrop": {
     "message": "Crop (C)",
     "description": "Crop tool tooltip"
+  },
+  "tooltipPadding": {
+    "message": "Add Padding (P)",
+    "description": "Padding action tooltip"
   },
   "tooltipText": {
     "message": "Text (T)",
@@ -214,5 +260,225 @@
   "tooltipActualSize": {
     "message": "Actual Size (0)",
     "description": "Actual size tooltip"
+  },
+
+  "editorDocumentTitle": {
+    "message": "Edit Screenshot - Element Screenshot Editor",
+    "description": "Document title for the editor page"
+  },
+  "editorLoadingImage": {
+    "message": "Loading image...",
+    "description": "Status message while the editor loads an image"
+  },
+  "editorLoadingDefault": {
+    "message": "Loading...",
+    "description": "Generic loading message"
+  },
+  "editorErrorNoImage": {
+    "message": "No image found in storage",
+    "description": "Error shown when no captured image exists"
+  },
+  "editorNotificationImageLoaded": {
+    "message": "Image loaded successfully!",
+    "description": "Notification when image load succeeds"
+  },
+  "editorNotificationLoadFailed": {
+    "message": "Failed to load image. $1",
+    "description": "Notification when image load fails",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorNotificationUndoSuccess": {
+    "message": "Undo successful",
+    "description": "Notification after undo action"
+  },
+  "editorNotificationRedoSuccess": {
+    "message": "Redo successful",
+    "description": "Notification after redo action"
+  },
+  "editorConfirmReset": {
+    "message": "Reset all changes? This cannot be undone.",
+    "description": "Confirmation text for resetting edits"
+  },
+  "editorNotificationReset": {
+    "message": "Image reset to original",
+    "description": "Notification after reset"
+  },
+  "editorPromptPaddingSize": {
+    "message": "Enter padding size in pixels (e.g., $1):",
+    "description": "Prompt asking for padding size",
+    "placeholders": {
+      "defaultPadding": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorErrorPaddingInvalidNumber": {
+    "message": "Please enter a valid positive number",
+    "description": "Error when padding input is invalid"
+  },
+  "editorErrorPaddingTooLarge": {
+    "message": "Padding size is too large (max: $1px)",
+    "description": "Error when padding input exceeds maximum",
+    "placeholders": {
+      "maxPadding": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorNotificationPaddingAdded": {
+    "message": "Added $1px padding",
+    "description": "Notification after padding is applied",
+    "placeholders": {
+      "padding": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorNotificationCopySuccess": {
+    "message": "Copied to clipboard!",
+    "description": "Notification after copy succeeds"
+  },
+  "editorNotificationCopyFailure": {
+    "message": "Failed to copy to clipboard",
+    "description": "Notification after copy fails"
+  },
+  "editorNotificationDownload": {
+    "message": "Downloaded as $1",
+    "description": "Notification after download completes",
+    "placeholders": {
+      "filename": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorPromptEnterText": {
+    "message": "Enter text:",
+    "description": "Prompt shown when adding text"
+  },
+  "editorOptionsTextTitle": {
+    "message": "Text Tool",
+    "description": "Title for text tool options"
+  },
+  "editorOptionsTextFontSizeLabel": {
+    "message": "Font Size:",
+    "description": "Label for font size input"
+  },
+  "editorOptionsTextFontFamilyLabel": {
+    "message": "Font Family:",
+    "description": "Label for font family select"
+  },
+  "editorOptionsShapeTitle": {
+    "message": "$1 Tool",
+    "description": "Title for shape tool options",
+    "placeholders": {
+      "shape": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorOptionsShapeFilledLabel": {
+    "message": "Filled",
+    "description": "Label for filled checkbox"
+  },
+  "editorOptionsShapeInstructions": {
+    "message": "Click and drag to draw a $1.",
+    "description": "Instructions for drawing shapes",
+    "placeholders": {
+      "shape": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorOptionsArrowTitle": {
+    "message": "Arrow Tool",
+    "description": "Title for arrow tool options"
+  },
+  "editorOptionsArrowInstructions": {
+    "message": "Click and drag to draw an arrow.",
+    "description": "Instructions for arrow tool"
+  },
+  "editorOptionsBlurTitle": {
+    "message": "Blur Tool",
+    "description": "Title for blur tool options"
+  },
+  "editorOptionsBlurRadiusLabel": {
+    "message": "Blur Radius",
+    "description": "Label for blur radius slider"
+  },
+  "editorOptionsBlurInstructions": {
+    "message": "Click and drag to blur an area.",
+    "description": "Instructions for blur tool"
+  },
+  "editorOptionsMosaicTitle": {
+    "message": "Mosaic Tool",
+    "description": "Title for mosaic tool options"
+  },
+  "editorOptionsMosaicBlockSizeLabel": {
+    "message": "Block Size",
+    "description": "Label for mosaic block size slider"
+  },
+  "editorOptionsMosaicInstructions": {
+    "message": "Click and drag to apply mosaic effect.",
+    "description": "Instructions for mosaic tool"
+  },
+  "editorOptionsCropTitle": {
+    "message": "Crop Tool",
+    "description": "Title for crop tool options"
+  },
+  "editorOptionsCropIntro": {
+    "message": "Two ways to crop:",
+    "description": "Intro text for crop options"
+  },
+  "editorOptionsCropMethod1Label": {
+    "message": "Method 1: Edge Trim (Office-style)",
+    "description": "Label for crop method 1"
+  },
+  "editorOptionsCropMethod1Step1": {
+    "message": "Drag edge handles to trim borders",
+    "description": "First step for crop method 1"
+  },
+  "editorOptionsCropMethod1Step2": {
+    "message": "Click Apply to confirm",
+    "description": "Second step for crop method 1"
+  },
+  "editorOptionsCropApplyButton": {
+    "message": "Apply Edge Crop",
+    "description": "Label for apply edge crop button"
+  },
+  "editorOptionsCropMethod2Label": {
+    "message": "Method 2: Area Selection",
+    "description": "Label for crop method 2"
+  },
+  "editorOptionsCropMethod2Step1": {
+    "message": "Click and drag to select area",
+    "description": "First step for crop method 2"
+  },
+  "editorOptionsCropMethod2Step2": {
+    "message": "Release to apply immediately",
+    "description": "Second step for crop method 2"
+  },
+  "editorOptionsMoveTitle": {
+    "message": "Move Tool",
+    "description": "Title for move tool options"
+  },
+  "editorOptionsMoveDescription": {
+    "message": "Click and drag to pan the canvas.",
+    "description": "Description for move tool options"
+  },
+  "editorOptionsMoveTip1": {
+    "message": "Drag to move the view",
+    "description": "First tip for move tool"
+  },
+  "editorOptionsMoveTip2": {
+    "message": "Use with zoom for easier navigation",
+    "description": "Second tip for move tool"
+  },
+  "editorOptionsMoveTip3": {
+    "message": "Press ESC to deselect",
+    "description": "Third tip for move tool"
   }
 }

@@ -260,6 +260,9 @@ class BaseTool {
       optionsPanel.innerHTML = this.getOptionsHTML();
       optionsPanel.classList.add('visible');
       this.attachOptionListeners();
+      if (typeof applyI18nMessages === 'function') {
+        applyI18nMessages();
+      }
     }
   }
 

@@ -10,38 +10,57 @@
     <div class="popup-container">
       <header class="popup-header">
         <h1 class="popup-title">
-          📸 Element Screenshot
+          📸 <span data-i18n="popupTitle"></span>
         </h1>
       </header>
 
       <main class="popup-main">
-        <div class="popup-description">
-          Capture screenshots of specific elements on the page
-        </div>
+        <div class="popup-description" data-i18n="popupDescription"></div>
 
         <div class="popup-actions">
           <button id="startSelectionBtn" class="popup-btn popup-btn--primary">
-            Start Selection
+            <span data-i18n="startSelectionBtn"></span>
           </button>
         </div>
 
         <div class="popup-instructions">
-          <h3>How to use:</h3>
+          <h3 data-i18n="howToUseTitle"></h3>
           <ol>
-            <li>Click "Start Selection"</li>
-            <li>Hover over elements to highlight them</li>
-            <li>Click an element to select it</li>
-            <li>Use the slider to adjust selection</li>
-            <li>Click "Capture" to take screenshot</li>
+            <li data-i18n="howToUseStep1"></li>
+            <li data-i18n="howToUseStep2"></li>
+            <li data-i18n="howToUseStep3"></li>
+            <li data-i18n="howToUseStep4"></li>
+            <li data-i18n="howToUseStep5"></li>
           </ol>
         </div>
 
         <div class="popup-shortcuts">
-          <h3>Keyboard shortcuts:</h3>
+          <h3 data-i18n="keyboardShortcutsTitle"></h3>
           <ul>
-            <li><kbd>ESC</kbd> - Cancel selection</li>
-            <li><kbd>↑</kbd> / <kbd>←</kbd> - Select parent</li>
-            <li><kbd>↓</kbd> / <kbd>→</kbd> - Select child</li>
+            <li>
+              <kbd>ESC</kbd>
+              &nbsp;-&nbsp;
+              <span class="popup-shortcuts__label" data-i18n="shortcutEsc"></span>
+            </li>
+            <li>
+              <kbd>Enter</kbd>
+              &nbsp;-&nbsp;
+              <span class="popup-shortcuts__label" data-i18n="shortcutEnter"></span>
+            </li>
+            <li>
+              <kbd>↑</kbd>
+              /
+              <kbd>←</kbd>
+              &nbsp;-&nbsp;
+              <span class="popup-shortcuts__label" data-i18n="shortcutUpLeft"></span>
+            </li>
+            <li>
+              <kbd>↓</kbd>
+              /
+              <kbd>→</kbd>
+              &nbsp;-&nbsp;
+              <span class="popup-shortcuts__label" data-i18n="shortcutDownRight"></span>
+            </li>
           </ul>
         </div>
       </main>

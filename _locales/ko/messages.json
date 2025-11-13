@@ -62,7 +62,41 @@
     "message": "자식 요소 선택",
     "description": "아래/오른쪽 화살표 단축키 설명"
   },
+  "shortcutEnter": {
+    "message": "선택한 요소 캡처",
+    "description": "Enter 키 단축키 설명"
+  },
 
+  "statusNoActiveTab": {
+    "message": "활성 탭을 찾을 수 없습니다",
+    "description": "활성 탭이 없을 때 상태 메시지"
+  },
+  "statusRestrictedPage": {
+    "message": "이 페이지에서는 캡처할 수 없습니다. 일반 웹사이트에서 다시 시도하세요.",
+    "description": "제한된 페이지에서 캡처 시도 시 상태 메시지"
+  },
+  "statusSelectionActivated": {
+    "message": "선택 모드가 활성화되었습니다!",
+    "description": "선택 모드가 성공적으로 시작될 때 상태 메시지"
+  },
+  "statusContentScriptMissing": {
+    "message": "콘텐츠 스크립트가 로드되지 않았습니다. 페이지를 새로고침한 후 다시 시도하세요.",
+    "description": "콘텐츠 스크립트가 누락된 경우 상태 메시지"
+  },
+  "statusStartSelectionFailed": {
+    "message": "선택을 시작하지 못했습니다: $1",
+    "description": "선택 시작에 실패했을 때 상태 메시지",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+
+  "toolMove": {
+    "message": "이동",
+    "description": "이동 도구"
+  },
   "toolSelect": {
     "message": "선택",
     "description": "선택 도구"
@@ -70,6 +104,10 @@
   "toolCrop": {
     "message": "자르기",
     "description": "자르기 도구"
+  },
+  "toolPadding": {
+    "message": "여백",
+    "description": "여백 추가 동작"
   },
   "toolText": {
     "message": "텍스트",
@@ -155,6 +193,10 @@
     "description": "JPG 다운로드 버튼"
   },
 
+  "tooltipMove": {
+    "message": "이동 (V)",
+    "description": "이동 도구 툴팁"
+  },
   "tooltipSelect": {
     "message": "선택 (V)",
     "description": "선택 도구 툴팁"
@@ -162,6 +204,10 @@
   "tooltipCrop": {
     "message": "자르기 (C)",
     "description": "자르기 도구 툴팁"
+  },
+  "tooltipPadding": {
+    "message": "여백 추가 (P)",
+    "description": "여백 추가 툴팁"
   },
   "tooltipText": {
     "message": "텍스트 (T)",
@@ -214,5 +260,225 @@
   "tooltipActualSize": {
     "message": "실제 크기 (0)",
     "description": "실제 크기 툴팁"
+  },
+
+  "editorDocumentTitle": {
+    "message": "스크린샷 편집 - 요소 스크린샷 에디터",
+    "description": "에디터 페이지 제목"
+  },
+  "editorLoadingImage": {
+    "message": "이미지를 불러오는 중...",
+    "description": "이미지를 불러올 때 표시되는 메시지"
+  },
+  "editorLoadingDefault": {
+    "message": "불러오는 중...",
+    "description": "일반 로딩 메시지"
+  },
+  "editorErrorNoImage": {
+    "message": "저장된 이미지가 없습니다",
+    "description": "캡처된 이미지가 없을 때 오류 메시지"
+  },
+  "editorNotificationImageLoaded": {
+    "message": "이미지를 성공적으로 불러왔습니다!",
+    "description": "이미지 로드 성공 알림"
+  },
+  "editorNotificationLoadFailed": {
+    "message": "이미지를 불러오지 못했습니다. $1",
+    "description": "이미지 로드 실패 알림",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorNotificationUndoSuccess": {
+    "message": "실행을 취소했습니다",
+    "description": "실행 취소 후 알림"
+  },
+  "editorNotificationRedoSuccess": {
+    "message": "다시 실행했습니다",
+    "description": "다시 실행 후 알림"
+  },
+  "editorConfirmReset": {
+    "message": "모든 변경 사항을 초기화할까요? 이 작업은 되돌릴 수 없습니다.",
+    "description": "초기화 확인 메시지"
+  },
+  "editorNotificationReset": {
+    "message": "이미지가 원래 상태로 초기화되었습니다",
+    "description": "초기화 완료 알림"
+  },
+  "editorPromptPaddingSize": {
+    "message": "여백 크기(픽셀)를 입력하세요 (예: $1):",
+    "description": "여백 크기 입력 프롬프트",
+    "placeholders": {
+      "defaultPadding": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorErrorPaddingInvalidNumber": {
+    "message": "올바른 양수 값을 입력하세요",
+    "description": "여백 입력 오류 메시지"
+  },
+  "editorErrorPaddingTooLarge": {
+    "message": "여백 크기가 너무 큽니다 (최대: $1px)",
+    "description": "여백 최대값 초과 메시지",
+    "placeholders": {
+      "maxPadding": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorNotificationPaddingAdded": {
+    "message": "$1px 여백을 추가했습니다",
+    "description": "여백 추가 완료 알림",
+    "placeholders": {
+      "padding": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorNotificationCopySuccess": {
+    "message": "클립보드에 복사했습니다!",
+    "description": "복사 성공 알림"
+  },
+  "editorNotificationCopyFailure": {
+    "message": "클립보드에 복사하지 못했습니다",
+    "description": "복사 실패 알림"
+  },
+  "editorNotificationDownload": {
+    "message": "$1 파일로 다운로드했습니다",
+    "description": "다운로드 완료 알림",
+    "placeholders": {
+      "filename": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorPromptEnterText": {
+    "message": "텍스트를 입력하세요:",
+    "description": "텍스트 입력 프롬프트"
+  },
+  "editorOptionsTextTitle": {
+    "message": "텍스트 도구",
+    "description": "텍스트 도구 옵션 제목"
+  },
+  "editorOptionsTextFontSizeLabel": {
+    "message": "글꼴 크기:",
+    "description": "글꼴 크기 레이블"
+  },
+  "editorOptionsTextFontFamilyLabel": {
+    "message": "글꼴:",
+    "description": "글꼴 선택 레이블"
+  },
+  "editorOptionsShapeTitle": {
+    "message": "$1 도구",
+    "description": "도형 도구 옵션 제목",
+    "placeholders": {
+      "shape": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorOptionsShapeFilledLabel": {
+    "message": "채우기",
+    "description": "도형 채우기 체크박스 레이블"
+  },
+  "editorOptionsShapeInstructions": {
+    "message": "$1을 드래그하여 그립니다.",
+    "description": "도형 그리기 안내",
+    "placeholders": {
+      "shape": {
+        "content": "$1"
+      }
+    }
+  },
+  "editorOptionsArrowTitle": {
+    "message": "화살표 도구",
+    "description": "화살표 도구 옵션 제목"
+  },
+  "editorOptionsArrowInstructions": {
+    "message": "드래그하여 화살표를 그립니다.",
+    "description": "화살표 도구 안내"
+  },
+  "editorOptionsBlurTitle": {
+    "message": "흐림 도구",
+    "description": "흐림 도구 옵션 제목"
+  },
+  "editorOptionsBlurRadiusLabel": {
+    "message": "흐림 반경",
+    "description": "흐림 반경 슬라이더 레이블"
+  },
+  "editorOptionsBlurInstructions": {
+    "message": "드래그하여 영역을 흐리게 합니다.",
+    "description": "흐림 도구 안내"
+  },
+  "editorOptionsMosaicTitle": {
+    "message": "모자이크 도구",
+    "description": "모자이크 도구 옵션 제목"
+  },
+  "editorOptionsMosaicBlockSizeLabel": {
+    "message": "블록 크기",
+    "description": "모자이크 블록 크기 슬라이더 레이블"
+  },
+  "editorOptionsMosaicInstructions": {
+    "message": "드래그하여 모자이크 효과를 적용합니다.",
+    "description": "모자이크 도구 안내"
+  },
+  "editorOptionsCropTitle": {
+    "message": "자르기 도구",
+    "description": "자르기 도구 옵션 제목"
+  },
+  "editorOptionsCropIntro": {
+    "message": "자르는 방법은 두 가지입니다:",
+    "description": "자르기 안내 문구"
+  },
+  "editorOptionsCropMethod1Label": {
+    "message": "방법 1: 가장자리 다듬기 (Office 스타일)",
+    "description": "자르기 방법 1 레이블"
+  },
+  "editorOptionsCropMethod1Step1": {
+    "message": "가장자리 핸들을 드래그해 테두리를 다듬습니다",
+    "description": "자르기 방법 1 단계 1"
+  },
+  "editorOptionsCropMethod1Step2": {
+    "message": "\"적용\"을 눌러 확정합니다",
+    "description": "자르기 방법 1 단계 2"
+  },
+  "editorOptionsCropApplyButton": {
+    "message": "가장자리 자르기 적용",
+    "description": "가장자리 자르기 버튼 레이블"
+  },
+  "editorOptionsCropMethod2Label": {
+    "message": "방법 2: 영역 선택",
+    "description": "자르기 방법 2 레이블"
+  },
+  "editorOptionsCropMethod2Step1": {
+    "message": "드래그하여 영역을 선택합니다",
+    "description": "자르기 방법 2 단계 1"
+  },
+  "editorOptionsCropMethod2Step2": {
+    "message": "마우스를 놓으면 즉시 적용됩니다",
+    "description": "자르기 방법 2 단계 2"
+  },
+  "editorOptionsMoveTitle": {
+    "message": "이동 도구",
+    "description": "이동 도구 옵션 제목"
+  },
+  "editorOptionsMoveDescription": {
+    "message": "드래그하여 캔버스를 이동하세요.",
+    "description": "이동 도구 옵션 설명"
+  },
+  "editorOptionsMoveTip1": {
+    "message": "드래그하면 화면이 이동합니다",
+    "description": "이동 도구 팁 1"
+  },
+  "editorOptionsMoveTip2": {
+    "message": "확대/축소와 함께 사용하면 이동이 쉬워집니다",
+    "description": "이동 도구 팁 2"
+  },
+  "editorOptionsMoveTip3": {
+    "message": "ESC 키를 눌러 선택을 해제하세요",
+    "description": "이동 도구 팁 3"
   }
 }

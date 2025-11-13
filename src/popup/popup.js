@@ -3,6 +3,13 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  const uiLanguage = chrome.i18n.getUILanguage?.();
+  if (uiLanguage) {
+    document.documentElement.lang = uiLanguage;
+  }
+
+  applyI18nMessages();
+
   const startSelectionBtn = document.getElementById('startSelectionBtn');
 
   startSelectionBtn.addEventListener('click', async () => {
@@ -11,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
       if (!tab?.id) {
-        showStatus('No active tab found', 'error');
+        showStatus(chrome.i18n.getMessage('statusNoActiveTab') || 'No active tab found', 'error');
         return;
       }
 
@@ -21,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (isRestricted) {
         showStatus(
-          'Cannot capture on this page. Try a regular website instead.',
+          chrome.i18n.getMessage('statusRestrictedPage') ||
+            'Cannot capture on this page. Try a regular website instead.',
           'error'
         );
         return;
@@ -31,7 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
       await chrome.tabs.sendMessage(tab.id, { action: 'startSelection' });
 
       // Show success status
-      showStatus('Selection mode activated!', 'success');
+      showStatus(
+        chrome.i18n.getMessage('statusSelectionActivated') || 'Selection mode activated!',
+        'success'
+      );
 
       // Close popup after short delay
       setTimeout(() => {
@@ -44,11 +55,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // Show user-friendly error message
       if (error.message?.includes('Receiving end does not exist')) {
         showStatus(
-          'Content script not loaded. Please refresh the page and try again.',
+          chrome.i18n.getMessage('statusContentScriptMissing') ||
+            'Content script not loaded. Please refresh the page and try again.',
           'error'
         );
       } else {
-        showStatus(`Failed to start selection: ${error.message}`, 'error');
+        showStatus(
+          chrome.i18n.getMessage('statusStartSelectionFailed', error.message) ||
+            `Failed to start selection: ${error.message}`,
+          'error'
+        );
       }
     }
   });
@@ -80,5 +96,36 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       status.remove();
     }, 5000);
+  }
+
+  /**
+   * Populate UI text with localized messages
+   */
+  function applyI18nMessages() {
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach((element) => {
+      const key = element.getAttribute('data-i18n');
+      if (!key) {
+        return;
+      }
+
+      const message = chrome.i18n.getMessage(key);
+      if (!message) {
+        return;
+      }
+
+      const attribute = element.getAttribute('data-i18n-attr');
+      if (attribute) {
+        element.setAttribute(attribute, message);
+        return;
+      }
+
+      if (element.dataset.i18nHtml === 'true') {
+        element.innerHTML = message;
+        return;
+      }
+
+      element.textContent = message;
+    });
   }
 });
