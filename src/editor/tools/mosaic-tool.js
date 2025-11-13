@@ -131,10 +131,17 @@ class MosaicTool extends BaseTool {
   }
 
   getOptionsHTML() {
+    const title = getMessage('editorOptionsMosaicTitle') || 'Mosaic Tool';
+    const blockSizeLabel =
+      getMessage('editorOptionsMosaicBlockSizeLabel') || 'Block Size';
+    const instructions =
+      getMessage('editorOptionsMosaicInstructions') ||
+      'Click and drag to apply mosaic effect.';
+
     return `
-      <h3>Mosaic Tool</h3>
+      <h3>${title}</h3>
       <div class="editor-options__field">
-        <label>Block Size: <span id="blockSizeValue">${this.blockSize}px</span></label>
+        <label>${blockSizeLabel}: <span id="blockSizeValue">${this.blockSize}px</span></label>
         <input
           type="range"
           id="mosaicBlockSize"
@@ -144,7 +151,7 @@ class MosaicTool extends BaseTool {
         />
       </div>
       <p style="font-size: 12px; color: #666; margin-top: 8px;">
-        Click and drag to apply mosaic effect.
+        ${instructions}
       </p>
     `;
   }

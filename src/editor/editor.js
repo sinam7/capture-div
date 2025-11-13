@@ -41,14 +41,14 @@ class ImageEditor {
    * Initializes the editor
    */
   async init() {
-    this.showLoading('Loading image...');
+    this.showLoading(getMessage('editorLoadingImage') || 'Loading image...');
 
     try {
       // Load image from storage
       const imageData = await Storage.get('capturedImage');
 
       if (!imageData) {
-        throw new Error('No image found in storage');
+        throw new Error(getMessage('editorErrorNoImage') || 'No image found in storage');
       }
 
       // Load image onto canvas
@@ -71,11 +71,18 @@ class ImageEditor {
       this.activateTool('move');
 
       this.hideLoading();
-      this.showNotification('Image loaded successfully!', 'success');
+      this.showNotification(
+        getMessage('editorNotificationImageLoaded') || 'Image loaded successfully!',
+        'success'
+      );
     } catch (error) {
       console.error('Failed to initialize editor:', error);
       this.hideLoading();
-      this.showNotification('Failed to load image. ' + error.message, 'error');
+      this.showNotification(
+        getMessage('editorNotificationLoadFailed', error.message) ||
+          `Failed to load image. ${error.message}`,
+        'error'
+      );
     }
   }
 
@@ -432,7 +439,9 @@ class ImageEditor {
    */
   undo() {
     if (this.historyManager.undo()) {
-      this.showNotification('Undo successful');
+      this.showNotification(
+        getMessage('editorNotificationUndoSuccess') || 'Undo successful'
+      );
       this._notifyToolOfHistoryChange();
     }
   }
@@ -442,7 +451,9 @@ class ImageEditor {
    */
   redo() {
     if (this.historyManager.redo()) {
-      this.showNotification('Redo successful');
+      this.showNotification(
+        getMessage('editorNotificationRedoSuccess') || 'Redo successful'
+      );
       this._notifyToolOfHistoryChange();
     }
   }
@@ -462,11 +473,15 @@ class ImageEditor {
    * Resets the canvas to original image
    */
   reset() {
-    if (confirm('Reset all changes? This cannot be undone.')) {
+    const confirmMessage =
+      getMessage('editorConfirmReset') || 'Reset all changes? This cannot be undone.';
+    if (confirm(confirmMessage)) {
       this.canvasManager.reset();
       this.historyManager.clear();
       this.historyManager.init();
-      this.showNotification('Image reset to original');
+      this.showNotification(
+        getMessage('editorNotificationReset') || 'Image reset to original'
+      );
     }
   }
 
@@ -477,7 +492,10 @@ class ImageEditor {
     const DEFAULT_PADDING = 20;
     const MAX_PADDING = 500;
 
-    const paddingInput = prompt(`Enter padding size in pixels (e.g., ${DEFAULT_PADDING}):`, `${DEFAULT_PADDING}`);
+    const promptMessage =
+      getMessage('editorPromptPaddingSize', `${DEFAULT_PADDING}`) ||
+      `Enter padding size in pixels (e.g., ${DEFAULT_PADDING}):`;
+    const paddingInput = prompt(promptMessage, `${DEFAULT_PADDING}`);
 
     if (paddingInput === null) {
       return; // User cancelled
@@ -486,12 +504,19 @@ class ImageEditor {
     const padding = parseInt(paddingInput, 10);
 
     if (isNaN(padding) || padding <= 0) {
-      this.showNotification('Please enter a valid positive number', 'error');
+      this.showNotification(
+        getMessage('editorErrorPaddingInvalidNumber') || 'Please enter a valid positive number',
+        'error'
+      );
       return;
     }
 
     if (padding > MAX_PADDING) {
-      this.showNotification(`Padding size is too large (max: ${MAX_PADDING}px)`, 'error');
+      this.showNotification(
+        getMessage('editorErrorPaddingTooLarge', `${MAX_PADDING}`) ||
+          `Padding size is too large (max: ${MAX_PADDING}px)`,
+        'error'
+      );
       return;
     }
 
@@ -504,7 +529,11 @@ class ImageEditor {
     // Update image info display
     this.updateImageInfo();
 
-    this.showNotification(`Added ${padding}px padding`, 'success');
+    this.showNotification(
+      getMessage('editorNotificationPaddingAdded', `${padding}`) ||
+        `Added ${padding}px padding`,
+      'success'
+    );
   }
 
   /**
@@ -518,10 +547,16 @@ class ImageEditor {
         new ClipboardItem({ 'image/png': blob }),
       ]);
 
-      this.showNotification('Copied to clipboard!', 'success');
+      this.showNotification(
+        getMessage('editorNotificationCopySuccess') || 'Copied to clipboard!',
+        'success'
+      );
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
-      this.showNotification('Failed to copy to clipboard', 'error');
+      this.showNotification(
+        getMessage('editorNotificationCopyFailure') || 'Failed to copy to clipboard',
+        'error'
+      );
     }
   }
 
@@ -538,7 +573,10 @@ class ImageEditor {
     link.href = dataUrl;
     link.click();
 
-    this.showNotification(`Downloaded as ${filename}`, 'success');
+    this.showNotification(
+      getMessage('editorNotificationDownload', filename) || `Downloaded as ${filename}`,
+      'success'
+    );
   }
 
   /**
@@ -584,14 +622,21 @@ class ImageEditor {
    * Shows loading overlay
    * @param {string} message - Loading message
    */
-  showLoading(message = 'Loading...') {
+  showLoading(message) {
+    const displayMessage = message || getMessage('editorLoadingDefault') || 'Loading...';
     const loading = document.createElement('div');
     loading.className = 'editor-loading';
     loading.id = 'editorLoading';
-    loading.innerHTML = `
-      <div class="editor-loading__spinner"></div>
-      <div class="editor-loading__text">${message}</div>
-    `;
+
+    const spinner = document.createElement('div');
+    spinner.className = 'editor-loading__spinner';
+
+    const text = document.createElement('div');
+    text.className = 'editor-loading__text';
+    text.textContent = displayMessage;
+
+    loading.appendChild(spinner);
+    loading.appendChild(text);
 
     document.body.appendChild(loading);
   }
@@ -609,5 +654,17 @@ class ImageEditor {
 
 // Initialize editor when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  const uiLanguage = chrome.i18n.getUILanguage?.();
+  if (uiLanguage) {
+    document.documentElement.lang = uiLanguage;
+  }
+
+  applyI18nMessages();
+
+  const titleMessage = getMessage('editorDocumentTitle');
+  if (titleMessage) {
+    document.title = titleMessage;
+  }
+
   window.editor = new ImageEditor();
 });

@@ -11,55 +11,116 @@
       <!-- Toolbar -->
       <div class="editor-toolbar">
         <div class="editor-toolbar__section">
-          <button class="editor-toolbar__btn" data-tool="move" title="Move (V)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="move"
+            title="Move (V)"
+            data-i18n="tooltipMove"
+            data-i18n-attr="title"
+          >
             <span class="icon">&#10010;</span>
-            <span class="label">Move</span>
+            <span class="label" data-i18n="toolMove"></span>
           </button>
-          <button class="editor-toolbar__btn" data-tool="crop" title="Crop (C)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="crop"
+            title="Crop (C)"
+            data-i18n="tooltipCrop"
+            data-i18n-attr="title"
+          >
             <span class="icon">⊡</span>
-            <span class="label">Crop</span>
+            <span class="label" data-i18n="toolCrop"></span>
           </button>
-          <button class="editor-toolbar__btn" data-action="padding" id="paddingBtn" title="Add Padding (P)">
+          <button
+            class="editor-toolbar__btn"
+            data-action="padding"
+            id="paddingBtn"
+            title="Add Padding (P)"
+            data-i18n="tooltipPadding"
+            data-i18n-attr="title"
+          >
             <span class="icon">⊞</span>
-            <span class="label">Padding</span>
+            <span class="label" data-i18n="toolPadding"></span>
           </button>
         </div>
 
         <div class="editor-toolbar__divider"></div>
 
         <div class="editor-toolbar__section">
-          <button class="editor-toolbar__btn" data-tool="text" title="Text (T)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="text"
+            title="Text (T)"
+            data-i18n="tooltipText"
+            data-i18n-attr="title"
+          >
             <span class="icon">T</span>
-            <span class="label">Text</span>
+            <span class="label" data-i18n="toolText"></span>
           </button>
-          <button class="editor-toolbar__btn" data-tool="arrow" title="Arrow (A)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="arrow"
+            title="Arrow (A)"
+            data-i18n="tooltipArrow"
+            data-i18n-attr="title"
+          >
             <span class="icon">↗</span>
-            <span class="label">Arrow</span>
+            <span class="label" data-i18n="toolArrow"></span>
           </button>
-          <button class="editor-toolbar__btn" data-tool="rectangle" title="Rectangle (R)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="rectangle"
+            title="Rectangle (R)"
+            data-i18n="tooltipRectangle"
+            data-i18n-attr="title"
+          >
             <span class="icon">▭</span>
-            <span class="label">Rectangle</span>
+            <span class="label" data-i18n="toolRectangle"></span>
           </button>
-          <button class="editor-toolbar__btn" data-tool="circle" title="Circle (O)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="circle"
+            title="Circle (O)"
+            data-i18n="tooltipCircle"
+            data-i18n-attr="title"
+          >
             <span class="icon">○</span>
-            <span class="label">Circle</span>
+            <span class="label" data-i18n="toolCircle"></span>
           </button>
-          <button class="editor-toolbar__btn" data-tool="line" title="Line (L)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="line"
+            title="Line (L)"
+            data-i18n="tooltipLine"
+            data-i18n-attr="title"
+          >
             <span class="icon">─</span>
-            <span class="label">Line</span>
+            <span class="label" data-i18n="toolLine"></span>
           </button>
         </div>
 
         <div class="editor-toolbar__divider"></div>
 
         <div class="editor-toolbar__section">
-          <button class="editor-toolbar__btn" data-tool="blur" title="Blur (B)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="blur"
+            title="Blur (B)"
+            data-i18n="tooltipBlur"
+            data-i18n-attr="title"
+          >
             <span class="icon">◐</span>
-            <span class="label">Blur</span>
+            <span class="label" data-i18n="toolBlur"></span>
           </button>
-          <button class="editor-toolbar__btn" data-tool="mosaic" title="Mosaic (M)">
+          <button
+            class="editor-toolbar__btn"
+            data-tool="mosaic"
+            title="Mosaic (M)"
+            data-i18n="tooltipMosaic"
+            data-i18n-attr="title"
+          >
             <span class="icon">▦</span>
-            <span class="label">Mosaic</span>
+            <span class="label" data-i18n="toolMosaic"></span>
           </button>
         </div>
 
@@ -72,9 +133,11 @@
             title="Undo (Ctrl+Z)"
             id="undoBtn"
             disabled
+            data-i18n="tooltipUndo"
+            data-i18n-attr="title"
           >
             <span class="icon">↶</span>
-            <span class="label">Undo</span>
+            <span class="label" data-i18n="actionUndo"></span>
           </button>
           <button
             class="editor-toolbar__btn"
@@ -82,9 +145,11 @@
             title="Redo (Ctrl+Y)"
             id="redoBtn"
             disabled
+            data-i18n="tooltipRedo"
+            data-i18n-attr="title"
           >
             <span class="icon">↷</span>
-            <span class="label">Redo</span>
+            <span class="label" data-i18n="actionRedo"></span>
           </button>
         </div>
 
@@ -96,44 +161,64 @@
             data-action="zoom-out"
             title="Zoom Out (-)"
             id="zoomOutBtn"
+            data-i18n="tooltipZoomOut"
+            data-i18n-attr="title"
           >
             <span class="icon">−</span>
-            <span class="label">Zoom Out</span>
+            <span class="label" data-i18n="actionZoomOut"></span>
           </button>
-          <span id="zoomLevel" class="editor-toolbar__zoom-level">100%</span>
+          <span
+            id="zoomLevel"
+            class="editor-toolbar__zoom-level"
+            data-i18n="actionActualSize"
+            data-i18n-dynamic="true"
+          ></span>
           <button
             class="editor-toolbar__btn"
             data-action="zoom-in"
             title="Zoom In (+)"
             id="zoomInBtn"
+            data-i18n="tooltipZoomIn"
+            data-i18n-attr="title"
           >
             <span class="icon">+</span>
-            <span class="label">Zoom In</span>
+            <span class="label" data-i18n="actionZoomIn"></span>
           </button>
           <button
             class="editor-toolbar__btn"
             data-action="fit-screen"
             title="Fit to Screen (F)"
             id="fitScreenBtn"
+            data-i18n="tooltipFitScreen"
+            data-i18n-attr="title"
           >
             <span class="icon">⛶</span>
-            <span class="label">Fit</span>
+            <span class="label" data-i18n="actionFit"></span>
           </button>
           <button
             class="editor-toolbar__btn"
             data-action="actual-size"
             title="Actual Size (0)"
             id="actualSizeBtn"
+            data-i18n="tooltipActualSize"
+            data-i18n-attr="title"
           >
             <span class="icon">1:1</span>
-            <span class="label">100%</span>
+            <span class="label" data-i18n="actionActualSize"></span>
           </button>
         </div>
 
         <div class="editor-toolbar__divider"></div>
 
         <div class="editor-toolbar__section">
-          <input type="color" id="colorPicker" value="#ff0000" title="Color" />
+          <input
+            type="color"
+            id="colorPicker"
+            value="#ff0000"
+            title="Color"
+            data-i18n="colorPickerTitle"
+            data-i18n-attr="title"
+          />
           <input
             type="range"
             id="strokeWidth"
@@ -141,6 +226,8 @@
             max="20"
             value="3"
             title="Stroke Width"
+            data-i18n="strokeWidthTitle"
+            data-i18n-attr="title"
           />
           <span id="strokeWidthValue">3px</span>
         </div>
@@ -154,19 +241,24 @@
       <!-- Bottom Actions -->
       <div class="editor-actions">
         <div class="editor-actions__info">
-          <span id="imageInfo">No image loaded</span>
+          <span id="imageInfo" data-i18n="noImageLoaded" data-i18n-dynamic="true"></span>
         </div>
 
         <div class="editor-actions__buttons">
-          <button class="editor-btn editor-btn--secondary" id="resetBtn">Reset</button>
+          <button class="editor-btn editor-btn--secondary" id="resetBtn">
+            <span data-i18n="btnReset"></span>
+          </button>
           <button class="editor-btn editor-btn--secondary" id="copyBtn">
-            📋 Copy to Clipboard
+            <span class="icon" aria-hidden="true">📋</span>
+            <span data-i18n="btnCopyClipboard"></span>
           </button>
           <button class="editor-btn editor-btn--primary" id="downloadPngBtn">
-            ⬇ Download PNG
+            <span class="icon" aria-hidden="true">⬇</span>
+            <span data-i18n="btnDownloadPng"></span>
           </button>
           <button class="editor-btn editor-btn--primary" id="downloadJpgBtn">
-            ⬇ Download JPG
+            <span class="icon" aria-hidden="true">⬇</span>
+            <span data-i18n="btnDownloadJpg"></span>
           </button>
         </div>
       </div>
@@ -179,6 +271,7 @@
 
     <!-- Scripts -->
     <script src="../utils/storage.js"></script>
+    <script src="../utils/i18n.js"></script>
     <script src="canvas-manager.js"></script>
     <script src="history-manager.js"></script>
     <script src="tools/base-tool.js"></script>

@@ -37,10 +37,14 @@ class ArrowTool extends BaseTool {
   }
 
   getOptionsHTML() {
+    const title = getMessage('editorOptionsArrowTitle') || 'Arrow Tool';
+    const instructions =
+      getMessage('editorOptionsArrowInstructions') || 'Click and drag to draw an arrow.';
+
     return `
-      <h3>Arrow Tool</h3>
+      <h3>${title}</h3>
       <p style="font-size: 12px; color: #666;">
-        Click and drag to draw an arrow.
+        ${instructions}
       </p>
     `;
   }

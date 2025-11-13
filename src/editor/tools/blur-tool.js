@@ -104,10 +104,15 @@ class BlurTool extends BaseTool {
   }
 
   getOptionsHTML() {
+    const title = getMessage('editorOptionsBlurTitle') || 'Blur Tool';
+    const radiusLabel = getMessage('editorOptionsBlurRadiusLabel') || 'Blur Radius';
+    const instructions =
+      getMessage('editorOptionsBlurInstructions') || 'Click and drag to blur an area.';
+
     return `
-      <h3>Blur Tool</h3>
+      <h3>${title}</h3>
       <div class="editor-options__field">
-        <label>Blur Radius: <span id="blurRadiusValue">${this.blurRadius}px</span></label>
+        <label>${radiusLabel}: <span id="blurRadiusValue">${this.blurRadius}px</span></label>
         <input
           type="range"
           id="blurRadius"
@@ -117,7 +122,7 @@ class BlurTool extends BaseTool {
         />
       </div>
       <p style="font-size: 12px; color: #666; margin-top: 8px;">
-        Click and drag to blur an area.
+        ${instructions}
       </p>
     `;
   }

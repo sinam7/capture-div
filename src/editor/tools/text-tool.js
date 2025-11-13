@@ -23,7 +23,8 @@ class TextTool extends BaseTool {
   }
 
   showTextInput(x, y) {
-    const text = prompt('Enter text:');
+    const promptMessage = getMessage('editorPromptEnterText') || 'Enter text:';
+    const text = prompt(promptMessage);
 
     if (text && text.trim()) {
       this.drawText(text.trim(), x, y);
@@ -48,13 +49,13 @@ class TextTool extends BaseTool {
 
   getOptionsHTML() {
     return `
-      <h3>Text Tool</h3>
+      <h3 data-i18n="editorOptionsTextTitle"></h3>
       <div class="editor-options__field">
-        <label>Font Size:</label>
+        <label for="textFontSize" data-i18n="editorOptionsTextFontSizeLabel"></label>
         <input type="number" id="textFontSize" min="8" max="72" value="${this.fontSize}" />
       </div>
       <div class="editor-options__field">
-        <label>Font Family:</label>
+        <label for="textFontFamily" data-i18n="editorOptionsTextFontFamilyLabel"></label>
         <select id="textFontFamily">
           <option value="Arial">Arial</option>
           <option value="Helvetica">Helvetica</option>

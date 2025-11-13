@@ -84,19 +84,31 @@ class ShapeTool extends BaseTool {
   }
 
   getOptionsHTML() {
-    const shapeName =
+    const shapeKeyMap = {
+      rectangle: 'toolRectangle',
+      circle: 'toolCircle',
+      line: 'toolLine',
+    };
+    const fallbackName =
       this.shapeType.charAt(0).toUpperCase() + this.shapeType.slice(1);
+    const shapeLabel = getMessage(shapeKeyMap[this.shapeType]) || fallbackName;
+    const title =
+      getMessage('editorOptionsShapeTitle', shapeLabel) || `${shapeLabel} Tool`;
+    const filledLabel = getMessage('editorOptionsShapeFilledLabel') || 'Filled';
+    const instructions =
+      getMessage('editorOptionsShapeInstructions', shapeLabel) ||
+      `Click and drag to draw a ${this.shapeType}.`;
 
     return `
-      <h3>${shapeName} Tool</h3>
+      <h3>${title}</h3>
       <div class="editor-options__field">
         <label>
           <input type="checkbox" id="shapeFilled" ${this.filled ? 'checked' : ''} />
-          Filled
+          ${filledLabel}
         </label>
       </div>
       <p style="font-size: 12px; color: #666; margin-top: 8px;">
-        Click and drag to draw a ${this.shapeType}.
+        ${instructions}
       </p>
     `;
   }

@@ -33,6 +33,7 @@ class BaseTool {
     this.isActive = false;
     this.removeListeners();
     this.hideOptions();
+    this.resetCursor();
   }
 
   /**
@@ -247,8 +248,30 @@ class BaseTool {
    * Updates cursor style
    */
   updateCursor() {
-    this.canvas.classList.remove('cursor-default', 'cursor-move', 'cursor-text', 'cursor-crosshair');
+    this.canvas.classList.remove(
+      'cursor-default',
+      'cursor-move',
+      'cursor-text',
+      'cursor-crosshair',
+      'cursor-crop'
+    );
     this.canvas.classList.add('cursor-crosshair');
+  }
+
+  /**
+   * Resets any cursor overrides applied by the tool
+   */
+  resetCursor() {
+    this.canvas.classList.remove(
+      'cursor-default',
+      'cursor-move',
+      'cursor-text',
+      'cursor-crosshair',
+      'cursor-crop'
+    );
+    if (!this.isActive) {
+      this.canvas.style.cursor = '';
+    }
   }
 
   /**
@@ -260,6 +283,9 @@ class BaseTool {
       optionsPanel.innerHTML = this.getOptionsHTML();
       optionsPanel.classList.add('visible');
       this.attachOptionListeners();
+      if (typeof applyI18nMessages === 'function') {
+        applyI18nMessages();
+      }
     }
   }
 
