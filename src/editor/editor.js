@@ -161,11 +161,13 @@ class ImageEditor {
    */
   _centerCanvas(zoom) {
     const { width, height } = this.canvasManager.getDimensions();
-    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+    // Use clientWidth/Height to exclude scrollbars
+    const wrapperWidth = this.canvasWrapper.clientWidth;
+    const wrapperHeight = this.canvasWrapper.clientHeight;
     const scaledWidth = width * zoom;
     const scaledHeight = height * zoom;
-    this.translateX = (wrapperRect.width - scaledWidth) / 2;
-    this.translateY = (wrapperRect.height - scaledHeight) / 2;
+    this.translateX = (wrapperWidth - scaledWidth) / 2;
+    this.translateY = (wrapperHeight - scaledHeight) / 2;
   }
 
   /**
@@ -195,11 +197,13 @@ class ImageEditor {
    */
   fitToScreen() {
     const { width, height } = this.canvasManager.getDimensions();
-    const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+    // Use clientWidth/Height to exclude scrollbars
+    const wrapperWidth = this.canvasWrapper.clientWidth;
+    const wrapperHeight = this.canvasWrapper.clientHeight;
 
     // Calculate available space (subtract padding)
-    const availableWidth = wrapperRect.width - 40; // 20px padding on each side
-    const availableHeight = wrapperRect.height - 40;
+    const availableWidth = wrapperWidth - 40; // 20px padding on each side
+    const availableHeight = wrapperHeight - 40;
 
     // Calculate zoom to fit
     const zoomX = availableWidth / width;
@@ -211,6 +215,10 @@ class ImageEditor {
 
     // Center the canvas at the new zoom level
     this._centerCanvas(this.zoom);
+
+    // Reset viewport scroll to show the centered canvas
+    this.canvasWrapper.scrollLeft = 0;
+    this.canvasWrapper.scrollTop = 0;
 
     this._updateZoomDisplay();
     this.updateCanvasTransform();
@@ -225,6 +233,10 @@ class ImageEditor {
 
     // Center the canvas at 100% zoom
     this._centerCanvas(this.zoom);
+
+    // Reset viewport scroll to show the centered canvas
+    this.canvasWrapper.scrollLeft = 0;
+    this.canvasWrapper.scrollTop = 0;
 
     this._updateZoomDisplay();
     this.updateCanvasTransform();
