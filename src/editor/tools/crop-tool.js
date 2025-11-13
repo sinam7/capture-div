@@ -145,6 +145,22 @@ class CropTool extends BaseTool {
     this.drawEdgeCropOverlay();
   }
 
+  updateCursor() {
+    this.canvas.classList.remove(
+      'cursor-default',
+      'cursor-move',
+      'cursor-text',
+      'cursor-crosshair',
+      'cursor-crop'
+    );
+    this.canvas.classList.add('cursor-crop');
+  }
+
+  deactivate() {
+    super.deactivate();
+    this.canvas.classList.remove('cursor-crop');
+  }
+
   // Refresh internal caches and overlay when history (undo/redo) changes
   onHistoryChange() {
     // After undo/redo, the canvas dimensions and pixels might have changed.
