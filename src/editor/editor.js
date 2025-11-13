@@ -495,11 +495,11 @@ class ImageEditor {
       return;
     }
 
-    // Save current state to history before adding padding
-    this.historyManager.saveState();
-
     // Add padding
     this.canvasManager.addPadding(padding);
+
+    // Save state to history after adding padding
+    this.historyManager.saveState();
 
     // Update image info display
     this.updateImageInfo();

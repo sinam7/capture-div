@@ -30,6 +30,19 @@ class ElementCapturer {
   }
 
   /**
+   * Handles quota error with delay and retry message
+   * @param {number} attempt - Current attempt number
+   * @param {number} maxRetries - Maximum number of retries
+   * @param {string} context - Context description for logging (e.g., "capture 1")
+   */
+  static async handleCaptureQuotaError(attempt, maxRetries, context = '') {
+    const contextStr = context ? ` on ${context}` : '';
+    console.warn(`[ElementCapturer] Quota exceeded${contextStr}, retrying (${attempt}/${maxRetries})...`);
+    this.increaseCaptureDelay();
+    await this.delay(1000);
+  }
+
+  /**
    * [NEW] Captures a screenshot of the specified element
    * This is the main entry point - always uses native API
    * @param {HTMLElement} element - The element to capture
@@ -67,6 +80,10 @@ class ElementCapturer {
       await this.restoreOverlays();
       throw error;
     } finally {
+      // Always restore original scroll positions
+      window.scrollTo({ left: originalWindowScrollX, top: originalWindowScrollY, behavior: 'instant' });
+      this.restoreScrollableAncestors(originalScrollableAncestors);
+
       // Reset adaptive delay after capture operation completes
       this.resetCaptureDelay();
     }
@@ -134,10 +151,13 @@ class ElementCapturer {
           hiddenElements.push({
             element: el,
             originalDisplay: el.style.display,
+            originalVisibility: el.style.visibility,
+            originalPosition: el.style.position,
           });
 
-          // Only use display: none to hide (don't touch position)
           el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.position = 'static';
           return;
         }
 
@@ -173,9 +193,11 @@ class ElementCapturer {
    */
   static restoreFixedStickyElements(hiddenElements) {
     console.log(`[ElementCapturer] Restoring ${hiddenElements.length} elements`);
-    hiddenElements.forEach(({ element, originalDisplay }) => {
-      // Restore original display value (empty string removes inline style)
+    hiddenElements.forEach(({ element, originalDisplay, originalVisibility, originalPosition }) => {
+      // Restore original values (empty string removes inline style)
       element.style.display = originalDisplay || '';
+      element.style.visibility = originalVisibility || '';
+      element.style.position = originalPosition || '';
     });
   }
 
@@ -397,13 +419,7 @@ class ElementCapturer {
           // Check if it's a quota error
           if (errorMsg.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND')) {
             lastError = new Error(errorMsg);
-            console.warn(`[ElementCapturer] Quota exceeded, retrying (${attempt}/${maxRetries})...`);
-
-            // Increase delay for future captures
-            this.increaseCaptureDelay();
-
-            // Wait 1 second before retrying to respect quota limit
-            await this.delay(1000);
+            await this.handleCaptureQuotaError(attempt, maxRetries);
             continue;
           }
 
@@ -417,12 +433,7 @@ class ElementCapturer {
         // If it's a quota error and we have retries left, continue
         if (error.message.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND') && attempt < maxRetries) {
           lastError = error;
-          console.warn(`[ElementCapturer] Quota exceeded, retrying (${attempt}/${maxRetries})...`);
-
-          // Increase delay for future captures
-          this.increaseCaptureDelay();
-
-          await this.delay(1000);
+          await this.handleCaptureQuotaError(attempt, maxRetries);
           continue;
         }
 
@@ -490,11 +501,13 @@ class ElementCapturer {
    */
   static async captureWithStitching(element, initialRect, contentHeight, viewportHeight) {
     const dpr = window.devicePixelRatio;
-    const originalScrollX = window.scrollX;
-    const originalScrollY = window.scrollY;
 
     // Save scrollable ancestor elements' scroll positions
     const scrollableAncestors = this.saveScrollableAncestors(element);
+
+    // Save current scroll positions for use during scrolling (not for restoration)
+    const currentScrollX = window.scrollX;
+    const currentScrollY = window.scrollY;
 
     // Track all hidden elements across all scroll positions
     const allHiddenElements = [];
@@ -510,7 +523,7 @@ class ElementCapturer {
 
       // 1. Scroll to top of element (using updated position)
       window.scrollTo({
-        left: originalScrollX,
+        left: currentScrollX,
         top: updatedRect.top + window.scrollY,
         behavior: 'instant',
       });
@@ -550,7 +563,7 @@ class ElementCapturer {
           scrollY = elementAbsoluteTop + capturedHeight;
         }
 
-        window.scrollTo({ left: originalScrollX, top: scrollY, behavior: 'instant' });
+        window.scrollTo({ left: currentScrollX, top: scrollY, behavior: 'instant' });
         // Restore parent container scroll positions in case they were affected
         this.restoreScrollableAncestors(scrollableAncestors);
         await this.waitForDOMUpdate();
@@ -573,35 +586,42 @@ class ElementCapturer {
         let response;
         const maxRetries = 3;
         let captureSuccess = false;
+        let lastError = null;
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
-          response = await Messaging.sendToBackground({ action: 'captureVisibleTab' });
+          try {
+            response = await Messaging.sendToBackground({ action: 'captureVisibleTab' });
 
-          if (response.success) {
-            captureSuccess = true;
-            break;
-          }
+            if (response.success) {
+              captureSuccess = true;
+              break;
+            }
 
-          // Check if it's a quota error
-          if (response.error && response.error.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND')) {
-            console.warn(`[ElementCapturer] Quota exceeded on capture ${i + 1}, retrying (${attempt}/${maxRetries})...`);
-
-            // Increase delay for future captures
-            this.increaseCaptureDelay();
-
-            // Wait 1 second before retrying
-            if (attempt < maxRetries) {
-              await this.delay(1000);
+            // Check if it's a quota error
+            if (response.error && response.error.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND')) {
+              lastError = new Error(response.error);
+              await this.handleCaptureQuotaError(attempt, maxRetries, `capture ${i + 1}`);
               continue;
             }
-          }
 
-          // If not a quota error or last retry, break
-          break;
+            // If not a quota error, throw
+            throw new Error(response.error || 'Capture failed');
+
+          } catch (error) {
+            // If it's a quota error and we have retries left, continue
+            if (error.message.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND') && attempt < maxRetries) {
+              lastError = error;
+              await this.handleCaptureQuotaError(attempt, maxRetries, `capture ${i + 1}`);
+              continue;
+            }
+
+            // Otherwise, throw the error
+            throw error;
+          }
         }
 
         if (!captureSuccess) {
-          throw new Error(`Capture ${i + 1} failed: ${response.error}`);
+          throw lastError || new Error(`Capture ${i + 1} failed`);
         }
 
         const img = await this.loadImage(response.imageData);
@@ -660,8 +680,8 @@ class ElementCapturer {
       return finalCanvas.toDataURL('image/png');
 
     } finally {
-      // Always restore scroll positions (window and scrollable ancestors) and hidden elements
-      window.scrollTo({ left: originalScrollX, top: originalScrollY, behavior: 'instant' });
+      // Always restore scrollable ancestors and hidden elements
+      // (Window scroll position is restored by the main capture() method)
       this.restoreScrollableAncestors(scrollableAncestors);
       this.restoreFixedStickyElements(allHiddenElements);
       await this.waitForDOMUpdate();
