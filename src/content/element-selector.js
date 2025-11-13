@@ -196,6 +196,13 @@ class ElementSelector {
       event.preventDefault();
     }
 
+    // Enter key - capture selected element
+    if (event.key === 'Enter' && this.selectedElement) {
+      console.log('[ElementSelector] Enter key pressed - capturing element');
+      this.captureElement();
+      event.preventDefault();
+    }
+
     // Arrow keys - adjust depth when element is selected
     if (this.selectedElement) {
       if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
@@ -482,7 +489,8 @@ class ElementSelector {
         <div class="element-selector__instructions-content">
           <strong>Element Selection Active</strong>
           <p>Hover over elements and click to select</p>
-          <p>Press <kbd>ESC</kbd> to cancel</p>
+          <p>Use arrow keys to adjust selection</p>
+          <p>Press <kbd>Enter</kbd> to capture • <kbd>ESC</kbd> to cancel</p>
         </div>
       `,
     });
