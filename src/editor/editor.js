@@ -156,18 +156,16 @@ class ImageEditor {
 
   /**
    * Helper method to center the canvas at a given zoom level
+   * Uses zoom=1 (100%) as the reference point with translate(0, 0)
    * @param {number} zoom - The zoom level
    * @private
    */
   _centerCanvas(zoom) {
     const { width, height } = this.canvasManager.getDimensions();
-    // Use clientWidth/Height to exclude scrollbars
-    const wrapperWidth = this.canvasWrapper.clientWidth;
-    const wrapperHeight = this.canvasWrapper.clientHeight;
-    const scaledWidth = width * zoom;
-    const scaledHeight = height * zoom;
-    this.translateX = (wrapperWidth - scaledWidth) / 2;
-    this.translateY = (wrapperHeight - scaledHeight) / 2;
+    // At zoom=1, translate should be (0, 0)
+    // At other zoom levels, translate to keep canvas center point stable
+    this.translateX = width * (1 - zoom) / 2;
+    this.translateY = height * (1 - zoom) / 2;
   }
 
   /**
@@ -213,12 +211,14 @@ class ImageEditor {
     // Set zoom and position
     this.zoom = Math.max(this.minZoom, Math.min(fitZoom, this.maxZoom));
 
-    // Center the canvas at the new zoom level
+    // Set translate based on zoom (zoom=1 → translate(0,0))
     this._centerCanvas(this.zoom);
 
-    // Reset viewport scroll to show the centered canvas
-    this.canvasWrapper.scrollLeft = 0;
-    this.canvasWrapper.scrollTop = 0;
+    // Adjust viewport scroll to center the canvas in the viewport
+    const canvasCenterX = this.translateX + (width * this.zoom) / 2;
+    const canvasCenterY = this.translateY + (height * this.zoom) / 2;
+    this.canvasWrapper.scrollLeft = canvasCenterX - wrapperWidth / 2;
+    this.canvasWrapper.scrollTop = canvasCenterY - wrapperHeight / 2;
 
     this._updateZoomDisplay();
     this.updateCanvasTransform();
@@ -228,15 +228,21 @@ class ImageEditor {
    * Sets zoom to actual size (100%) and centers the canvas
    */
   setActualSize() {
+    const { width, height } = this.canvasManager.getDimensions();
+    const wrapperWidth = this.canvasWrapper.clientWidth;
+    const wrapperHeight = this.canvasWrapper.clientHeight;
+
     // Set zoom to 100%
     this.zoom = 1.0;
 
-    // Center the canvas at 100% zoom
+    // At zoom=1, translate will be (0, 0)
     this._centerCanvas(this.zoom);
 
-    // Reset viewport scroll to show the centered canvas
-    this.canvasWrapper.scrollLeft = 0;
-    this.canvasWrapper.scrollTop = 0;
+    // Adjust viewport scroll to center the canvas in the viewport
+    const canvasCenterX = this.translateX + (width * this.zoom) / 2;
+    const canvasCenterY = this.translateY + (height * this.zoom) / 2;
+    this.canvasWrapper.scrollLeft = canvasCenterX - wrapperWidth / 2;
+    this.canvasWrapper.scrollTop = canvasCenterY - wrapperHeight / 2;
 
     this._updateZoomDisplay();
     this.updateCanvasTransform();
