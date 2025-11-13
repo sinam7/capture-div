@@ -136,7 +136,10 @@ body {
   padding: 20px;
   /* Prevent wrapper from growing beyond flex container bounds */
   min-height: 0;
-  /* Remove grid layout to avoid conflicts with canvas transform positioning */
+  /* Use flexbox to center canvas horizontally while allowing vertical scroll */
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 .editor-canvas {
@@ -146,6 +149,8 @@ body {
   transform-origin: top left;
   transition: none;
   display: block;
+  /* Flexbox will position this element, transform will handle zoom/pan */
+  position: relative;
 }
 
 .editor-canvas.cursor-default {
