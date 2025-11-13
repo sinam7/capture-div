@@ -3,12 +3,35 @@
  * Handles screenshot capture coordination and editor page opening
  */
 
+// Import messaging utilities for cleanup
+importScripts('../utils/messaging.js');
+
 // Listen for extension installation
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     console.log('Element Screenshot Editor installed');
   } else if (details.reason === 'update') {
     console.log('Element Screenshot Editor updated');
+  }
+
+  // Set up periodic cleanup alarm (runs every 5 minutes)
+  chrome.alarms.create('cleanupCaptureData', { periodInMinutes: 5 });
+  console.log('Scheduled periodic cleanup of old capture data');
+});
+
+// Listen for alarms
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'cleanupCaptureData') {
+    // Clean up capture data older than 5 minutes
+    Messaging.cleanupOldCaptureData(5 * 60 * 1000)
+      .then((count) => {
+        if (count > 0) {
+          console.log(`[ServiceWorker] Cleaned up ${count} old capture entries`);
+        }
+      })
+      .catch((error) => {
+        console.error('[ServiceWorker] Cleanup failed:', error);
+      });
   }
 });
 

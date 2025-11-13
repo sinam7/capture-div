@@ -101,4 +101,42 @@ const Messaging = {
       return false;
     });
   },
+
+  /**
+   * Cleans up old capture data from chrome.storage.local
+   * Removes any capture_* keys older than the specified max age
+   * Should be called periodically from the service worker
+   * @param {number} maxAgeMs - Maximum age in milliseconds (default: 5 minutes)
+   * @returns {Promise<number>} Number of items cleaned up
+   */
+  async cleanupOldCaptureData(maxAgeMs = 5 * 60 * 1000) {
+    try {
+      const storage = await chrome.storage.local.get(null);
+      const now = Date.now();
+      const keysToRemove = [];
+
+      for (const key of Object.keys(storage)) {
+        // Check if this is a capture key (format: capture_<timestamp>_<random>)
+        if (key.startsWith('capture_')) {
+          const parts = key.split('_');
+          if (parts.length >= 2) {
+            const timestamp = parseInt(parts[1], 10);
+            if (!isNaN(timestamp) && (now - timestamp) > maxAgeMs) {
+              keysToRemove.push(key);
+            }
+          }
+        }
+      }
+
+      if (keysToRemove.length > 0) {
+        await chrome.storage.local.remove(keysToRemove);
+        console.log(`[Messaging] Cleaned up ${keysToRemove.length} old capture data entries`);
+      }
+
+      return keysToRemove.length;
+    } catch (error) {
+      console.error('[Messaging] Failed to cleanup old capture data:', error);
+      return 0;
+    }
+  },
 };
