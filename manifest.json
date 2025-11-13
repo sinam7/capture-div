@@ -9,7 +9,8 @@
     "tabs",
     "clipboardWrite",
     "storage",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>"
