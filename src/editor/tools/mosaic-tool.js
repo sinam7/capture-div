@@ -10,6 +10,19 @@ class MosaicTool extends BaseTool {
     this.savedImageData = null;
   }
 
+  /**
+   * Clamps coordinates to canvas bounds (keeps within valid pixel range)
+   * @private
+   * @param {number} x - X coordinate
+   * @param {number} y - Y coordinate
+   * @returns {Object} Clamped coordinates {x, y}
+   */
+  _clampToBounds(x, y) {
+    const clampedX = Math.max(0, Math.min(x, this.canvas.width - 1));
+    const clampedY = Math.max(0, Math.min(y, this.canvas.height - 1));
+    return { x: clampedX, y: clampedY };
+  }
+
   onDrawStart(x, y) {
     console.log('[MosaicTool] Draw start at', x, y);
     this.savedImageData = this.canvasManager.getImageData();
@@ -17,8 +30,9 @@ class MosaicTool extends BaseTool {
 
   onDrawMove(x, y) {
     // Clamp coordinates to canvas bounds
-    x = Math.max(0, Math.min(x, this.canvas.width));
-    y = Math.max(0, Math.min(y, this.canvas.height));
+    const clamped = this._clampToBounds(x, y);
+    x = clamped.x;
+    y = clamped.y;
 
     // Preview mosaic area (simplified for now)
     this.canvasManager.putImageData(this.savedImageData);
@@ -45,8 +59,9 @@ class MosaicTool extends BaseTool {
     console.log('[MosaicTool] Draw end at', x, y);
 
     // Clamp coordinates to canvas bounds
-    x = Math.max(0, Math.min(x, this.canvas.width));
-    y = Math.max(0, Math.min(y, this.canvas.height));
+    const clamped = this._clampToBounds(x, y);
+    x = clamped.x;
+    y = clamped.y;
 
     // Calculate mosaic rectangle
     const width = x - this.startX;
@@ -84,6 +99,20 @@ class MosaicTool extends BaseTool {
   }
 
   applyMosaic(x, y, width, height) {
+    // Validate coordinates and dimensions
+    if (width <= 0 || height <= 0) {
+      console.warn('[MosaicTool] Invalid dimensions:', { width, height });
+      return;
+    }
+
+    // Ensure coordinates are within canvas bounds
+    x = Math.max(0, Math.min(Math.floor(x), this.canvas.width - 1));
+    y = Math.max(0, Math.min(Math.floor(y), this.canvas.height - 1));
+    width = Math.min(Math.floor(width), this.canvas.width - x);
+    height = Math.min(Math.floor(height), this.canvas.height - y);
+
+    console.log('[MosaicTool] Applying mosaic:', { x, y, width, height, blockSize: this.blockSize });
+
     const ctx = this.canvas.getContext('2d');
     const imageData = ctx.getImageData(x, y, width, height);
     const data = imageData.data;
