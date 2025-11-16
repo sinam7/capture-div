@@ -513,15 +513,29 @@ class ElementCapturer {
     const allHiddenElements = [];
 
     try {
-      // [FIX] Hide sticky elements BEFORE scrolling to prevent layout changes
+      // [FIX] Step 1: Scroll to element top FIRST (before hiding sticky elements)
+      // This scrolls to where the element currently is with sticky elements still visible
+      window.scrollTo({
+        left: currentScrollX,
+        top: initialRect.top + window.scrollY,
+        behavior: 'instant',
+      });
+      // Restore parent container scroll positions in case they were affected
+      this.restoreScrollableAncestors(scrollableAncestors);
+      await this.waitForDOMUpdate();
+
+      // [FIX] Step 2: Hide sticky elements AFTER initial scroll
+      // This prevents the scroll from being offset by the height of hidden sticky elements
       const hiddenElements = this.hideAllFixedStickyElements();
       allHiddenElements.push(...hiddenElements);
       await this.waitForDOMUpdate();
 
-      // Recalculate element position after hiding sticky elements
+      // [FIX] Step 3: Recalculate element position after hiding sticky elements
+      // Layout may have shifted, so we need to get the new position
       const updatedRect = element.getBoundingClientRect();
 
-      // 1. Scroll to top of element (using updated position)
+      // [FIX] Step 4: Rescroll to correct position using updated rect
+      // This adjusts for any layout shifts caused by hiding sticky elements
       window.scrollTo({
         left: currentScrollX,
         top: updatedRect.top + window.scrollY,
