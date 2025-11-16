@@ -10,15 +10,29 @@ class MosaicTool extends BaseTool {
     this.savedImageData = null;
   }
 
+  /**
+   * Clamps coordinates to canvas bounds (keeps within valid pixel range)
+   * @private
+   * @param {number} x - X coordinate
+   * @param {number} y - Y coordinate
+   * @returns {Object} Clamped coordinates {x, y}
+   */
+  _clampToBounds(x, y) {
+    const clampedX = Math.max(0, Math.min(x, this.canvas.width - 1));
+    const clampedY = Math.max(0, Math.min(y, this.canvas.height - 1));
+    return { x: clampedX, y: clampedY };
+  }
+
   onDrawStart(x, y) {
     console.log('[MosaicTool] Draw start at', x, y);
     this.savedImageData = this.canvasManager.getImageData();
   }
 
   onDrawMove(x, y) {
-    // Clamp coordinates to canvas bounds (keep within valid pixel range)
-    x = Math.max(0, Math.min(x, this.canvas.width - 1));
-    y = Math.max(0, Math.min(y, this.canvas.height - 1));
+    // Clamp coordinates to canvas bounds
+    const clamped = this._clampToBounds(x, y);
+    x = clamped.x;
+    y = clamped.y;
 
     // Preview mosaic area (simplified for now)
     this.canvasManager.putImageData(this.savedImageData);
@@ -44,9 +58,10 @@ class MosaicTool extends BaseTool {
   onDrawEnd(x, y) {
     console.log('[MosaicTool] Draw end at', x, y);
 
-    // Clamp coordinates to canvas bounds (keep within valid pixel range)
-    x = Math.max(0, Math.min(x, this.canvas.width - 1));
-    y = Math.max(0, Math.min(y, this.canvas.height - 1));
+    // Clamp coordinates to canvas bounds
+    const clamped = this._clampToBounds(x, y);
+    x = clamped.x;
+    y = clamped.y;
 
     // Calculate mosaic rectangle
     const width = x - this.startX;
