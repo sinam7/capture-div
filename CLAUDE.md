@@ -67,7 +67,6 @@ capture-div/
 ├── manifest.json                     # Extension manifest (Manifest V3)
 ├── README.md                         # User documentation
 ├── DEVELOPMENT_RULES.md              # Coding standards and workflow
-├── IMPLEMENTATION_SUMMARY.md         # Sprint completion summary
 ├── CLAUDE.md                         # This file (AI assistant guide)
 │
 ├── src/
@@ -928,7 +927,6 @@ Before releasing a new version:
 - [ ] Test all tools and features
 - [ ] Remove all `console.log` statements (or use conditional logging)
 - [ ] Update README if features changed
-- [ ] Update IMPLEMENTATION_SUMMARY.md if needed
 - [ ] Run through manual testing checklist
 - [ ] Verify icons and assets are optimized
 - [ ] Test on Chrome stable and Edge
@@ -998,7 +996,6 @@ Before releasing a new version:
 
 - **DEVELOPMENT_RULES.md**: Detailed coding standards and workflow
 - **README.md**: User-facing documentation
-- **IMPLEMENTATION_SUMMARY.md**: Sprint completion summary
 - **manifest.json**: Extension configuration
 - **Chrome Extension Docs**: https://developer.chrome.com/docs/extensions/
 
