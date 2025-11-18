@@ -131,16 +131,6 @@ The extension automatically detects your browser's language settings and display
 - Edge 100+ (Chromium-based) ✅
 - Other Chromium browsers (untested)
 
-## Roadmap
-
-- [x] Sprint 1: Element selection system ✓
-- [x] Sprint 2: Basic image editor ✓
-- [x] Sprint 3: Advanced editing tools ✓
-- [x] Sprint 4: Save and export functionality ✓
-- [x] Sprint 5: Chrome Web Store deployment ✓
-
-**Current Status**: Live on Chrome Web Store! 🎉
-
 ## Keyboard Shortcuts
 
 ### Element Selection
