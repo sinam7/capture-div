@@ -3,8 +3,11 @@
 ![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Chrome](https://img.shields.io/badge/chrome-100+-brightgreen.svg)
+[![Product Hunt](https://img.shields.io/badge/Product%20Hunt-Capture%20div-DA552F?logo=producthunt&logoColor=white)](https://www.producthunt.com/products/capture-div)
 
 A powerful Chrome extension for capturing screenshots of specific web page elements with professional editing capabilities. Support for multiple languages including English and Korean (한국어).
+
+> 🎉 **Featured on Product Hunt!** Check out our [Product Hunt page](https://www.producthunt.com/products/capture-div) and show your support!
 
 ## Features
 
