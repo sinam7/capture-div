@@ -2,7 +2,7 @@
 
 ![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Chrome](https://img.shields.io/badge/chrome-100+-brightgreen.svg)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/okjlpeofoihnbkjpoakccbfehalcfikb)
 [![Product Hunt](https://img.shields.io/badge/Product%20Hunt-Capture%20div-DA552F?logo=producthunt&logoColor=white)](https://www.producthunt.com/products/capture-div)
 
 A powerful Chrome extension for capturing screenshots of specific web page elements with professional editing capabilities. Support for multiple languages including English and Korean (한국어).
@@ -35,8 +35,11 @@ A powerful Chrome extension for capturing screenshots of specific web page eleme
 
 ## Installation
 
-### From Chrome Web Store
-*Coming soon - Chrome Web Store deployment is planned for Sprint 5*
+### From Chrome Web Store (Recommended)
+
+**[Install from Chrome Web Store](https://chromewebstore.google.com/detail/okjlpeofoihnbkjpoakccbfehalcfikb)** ⬅️ Click to install
+
+Simply click the link above or visit the Chrome Web Store and click "Add to Chrome" to install the extension instantly.
 
 ### Manual Installation (For Development/Testing)
 1. Clone this repository:
@@ -134,7 +137,9 @@ The extension automatically detects your browser's language settings and display
 - [x] Sprint 2: Basic image editor ✓
 - [x] Sprint 3: Advanced editing tools ✓
 - [x] Sprint 4: Save and export functionality ✓
-- [ ] Sprint 5: Chrome Web Store deployment (Next)
+- [x] Sprint 5: Chrome Web Store deployment ✓
+
+**Current Status**: Live on Chrome Web Store! 🎉
 
 ## Keyboard Shortcuts
 
