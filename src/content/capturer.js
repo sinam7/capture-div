@@ -49,11 +49,10 @@ class ElementCapturer {
    * @returns {Promise<string>} Data URL of the captured image
    */
   static async capture(element) {
-    console.log('[ElementCapturer] Starting capture for element:', element.tagName);
-
     if (!element) {
       throw new Error('No element provided for capture');
     }
+    console.log('[ElementCapturer] Starting capture for element:', element.tagName);
 
     // Save original scroll positions BEFORE any scrolling operations
     const originalWindowScrollX = window.scrollX;
@@ -72,7 +71,11 @@ class ElementCapturer {
 
       // Step 4: Always use the native API (html2canvas removed due to CSP conflicts)
       console.log('[ElementCapturer] Using Chrome native capture method');
-      return await this.captureWithNativeAPI(element);
+      const imageData = await this.captureWithNativeAPI(element);
+      if (!imageData || imageData === 'data:,') {
+        throw new Error('Capture produced an empty image; check element dimensions');
+      }
+      return imageData;
 
     } catch (error) {
       console.error('[ElementCapturer] Capture failed:', error);
@@ -118,19 +121,22 @@ class ElementCapturer {
   }
 
   /**
-   * [UPDATED] Hides all fixed/sticky positioned elements on the page
-   * Prevents them from appearing in screenshots or duplicating during stitching
-   * Fixed elements are always hidden. Sticky elements are also always hidden
-   * because they can become stuck at any scroll position during multi-scroll capture
+   * Hides unrelated fixed/sticky elements while keeping the capture target visible.
+   * @param {HTMLElement} target - Selected element whose containing layers are preserved
    * @returns {Array} Array of {element, originalDisplay, originalVisibility, originalPosition}
    */
-  static hideAllFixedStickyElements() {
+  static hideAllFixedStickyElements(target) {
     console.log('[ElementCapturer] Hiding ALL fixed/sticky positioned elements');
     const hiddenElements = [];
     const allElements = document.querySelectorAll('*');
     const viewportHeight = window.innerHeight;
 
     allElements.forEach((el) => {
+      // The selected modal, its containing layers and its own content are part
+      // of the capture, even when they use fixed or sticky positioning.
+      if (target && (el.contains(target) || target.contains(el))) {
+        return;
+      }
       // Skip our own UI elements
       if (el.className && typeof el.className === 'string' && el.className.startsWith('element-selector__')) {
         return;
@@ -333,6 +339,15 @@ class ElementCapturer {
   static async captureWithNativeAPI(element) {
     console.log('[ElementCapturer] Capturing with Chrome native API');
 
+    const innerPanel = this.findContainedScrollPanel(element);
+    if (innerPanel) {
+      return this.captureScrollPanelWrapper(element, innerPanel);
+    }
+    const scrollContainer = this.findScrollContainer(element);
+    if (scrollContainer) {
+      return this.captureInnerScroll(element, scrollContainer);
+    }
+
     // [NEW] Calculate real content height first
     const contentHeight = this.getRealContentHeight(element);
 
@@ -359,7 +374,7 @@ class ElementCapturer {
       } else {
         console.log('[ElementCapturer] Single viewport capture');
         // For single viewport, hide sticky elements here
-        const hiddenElements = this.hideAllFixedStickyElements();
+        const hiddenElements = this.hideAllFixedStickyElements(element);
         await this.waitForDOMUpdate();
 
         try {
@@ -378,6 +393,165 @@ class ElementCapturer {
     }
 
     return imageDataUrl;
+  }
+
+  /** Finds a single full-width scrolling child, allowing a wrapper header/footer. */
+  static findContainedScrollPanel(element) {
+    const bounds = element.getBoundingClientRect();
+    const panels = [];
+    for (const child of element.querySelectorAll('*')) {
+      const style = window.getComputedStyle(child);
+      if (!/(auto|scroll|overlay)/.test(style.overflowY) ||
+          child.scrollHeight <= child.clientHeight || child.clientHeight <= 0) {
+        continue;
+      }
+      const rect = child.getBoundingClientRect();
+      if (Math.abs(rect.left - bounds.left) <= 1 &&
+          Math.abs(rect.width - bounds.width) <= 1 &&
+          rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1) {
+        panels.push(child);
+      }
+    }
+    return panels.length === 1 ? panels[0] : null;
+  }
+
+  /** Replaces a wrapper's panel viewport with its stitched content, keeping chrome once. */
+  static async captureScrollPanelWrapper(element, panel) {
+    const hiddenElements = this.hideAllFixedStickyElements(element);
+    const dpr = window.devicePixelRatio;
+    try {
+      await this.waitForDOMUpdate();
+      const rect = element.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      if (rect.top < 0 || rect.bottom > window.innerHeight ||
+          rect.left < 0 || rect.right > window.innerWidth) {
+        throw new Error('Bring the selected scroll-panel wrapper fully into view before capture');
+      }
+      const contentTop = panelRect.top - rect.top + panel.clientTop;
+      const contentBottom = contentTop + panel.clientHeight;
+      const base = await this.loadImage(
+        await this.captureSingleViewport(element, rect, rect.height));
+      await this.delay(this.currentCaptureDelay);
+      const content = await this.loadImage(await this.captureInnerScroll(panel, panel));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round((rect.height - panel.clientHeight) * dpr) + content.height;
+      const context = canvas.getContext('2d');
+      const top = Math.round(contentTop * dpr);
+      const bottom = Math.round(contentBottom * dpr);
+      if (top > 0) {
+        context.drawImage(base, 0, 0, base.width, top, 0, 0, canvas.width, top);
+      }
+      // Retain side borders/scrollbar background beside the expanded client area.
+      context.drawImage(base, 0, top, base.width, bottom - top,
+        0, top, canvas.width, content.height);
+      context.drawImage(content,
+        Math.round((panelRect.left - rect.left + panel.clientLeft) * dpr), top);
+      const footerHeight = base.height - bottom;
+      if (footerHeight > 0) {
+        context.drawImage(base, 0, bottom, base.width, footerHeight,
+          0, top + content.height, canvas.width, footerHeight);
+      }
+      const result = canvas.toDataURL('image/png');
+      if (result === 'data:,') {
+        throw new Error('Capture exceeds the browser canvas size limit');
+      }
+      return result;
+    } finally {
+      this.restoreFixedStickyElements(hiddenElements);
+    }
+  }
+
+  /** Finds the selected element's nearest vertical scrolling container. */
+  static findScrollContainer(element) {
+    for (let current = element;
+      current && current !== document.body && current !== document.documentElement;
+      current = current.parentElement) {
+      const style = window.getComputedStyle(current);
+      if (/(auto|scroll|overlay)/.test(style.overflowY) &&
+          current.scrollHeight > current.clientHeight && current.clientHeight > 0) {
+        return current;
+      }
+    }
+    return null;
+  }
+
+  /** Captures an inner scroller using actual scroll offsets, including the final overlap. */
+  static async captureInnerScroll(element, container) {
+    const originalTop = container.scrollTop;
+    const originalLeft = container.scrollLeft;
+    const hiddenElements = this.hideAllFixedStickyElements(element);
+    const dpr = window.devicePixelRatio;
+    try {
+      container.scrollTo({ top: 0, left: originalLeft, behavior: 'instant' });
+      await this.waitForDOMUpdate();
+      const rect = element.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const self = element === container;
+      const start = self ? 0 : rect.top - containerRect.top - container.clientTop;
+      const height = self ? container.scrollHeight : rect.height;
+      const width = self ? container.clientWidth : rect.width;
+      if (width <= 0 || height <= 0) {
+        throw new Error('Cannot capture an element with empty dimensions');
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      const context = canvas.getContext('2d');
+      let capturedHeight = 0;
+      while (capturedHeight < height) {
+        const before = container.getBoundingClientRect();
+        const viewportTop = Math.max(0, before.top + container.clientTop);
+        // Account for the scroller being partially above the browser viewport.
+        container.scrollTo({
+          top: start + capturedHeight - (viewportTop - before.top - container.clientTop),
+          left: originalLeft,
+          behavior: 'instant',
+        });
+        await this.waitForDOMUpdate();
+        const current = container.getBoundingClientRect();
+        const selected = element.getBoundingClientRect();
+        const sourceY = self
+          ? current.top + container.clientTop + capturedHeight - container.scrollTop
+          : selected.top + capturedHeight;
+        let visibleTop = Math.max(0, current.top + container.clientTop);
+        let visibleBottom = Math.min(window.innerHeight,
+          current.top + container.clientTop + container.clientHeight);
+        // Outer clipping containers may make part of this scroller invisible.
+        for (let parent = container.parentElement; parent; parent = parent.parentElement) {
+          if (/(auto|scroll|hidden|clip)/.test(window.getComputedStyle(parent).overflowY)) {
+            const bounds = parent.getBoundingClientRect();
+            visibleTop = Math.max(visibleTop, bounds.top + parent.clientTop);
+            visibleBottom = Math.min(visibleBottom,
+              bounds.top + parent.clientTop + parent.clientHeight);
+          }
+        }
+        const tileHeight = Math.min(height - capturedHeight, visibleBottom - sourceY);
+        if (sourceY < visibleTop - 0.5 || tileHeight <= 0) {
+          throw new Error('Inner scroll content cannot be brought into view');
+        }
+        const tile = await this.captureSingleViewport(element, {
+          left: selected.left + (self ? container.clientLeft : 0),
+          top: sourceY,
+          width,
+        }, tileHeight);
+        const image = await this.loadImage(tile);
+        const destinationTop = Math.round(capturedHeight * dpr);
+        const destinationBottom = Math.round((capturedHeight + tileHeight) * dpr);
+        context.drawImage(image, 0, destinationTop, canvas.width,
+          destinationBottom - destinationTop);
+        capturedHeight += tileHeight;
+        await this.delay(this.currentCaptureDelay);
+      }
+      const result = canvas.toDataURL('image/png');
+      if (result === 'data:,') {
+        throw new Error('Capture exceeds the browser canvas size limit');
+      }
+      return result;
+    } finally {
+      container.scrollTo({ top: originalTop, left: originalLeft, behavior: 'instant' });
+      this.restoreFixedStickyElements(hiddenElements);
+    }
   }
 
   /**
@@ -526,7 +700,7 @@ class ElementCapturer {
 
       // [FIX] Step 2: Hide sticky elements AFTER initial scroll
       // This prevents the scroll from being offset by the height of hidden sticky elements
-      const hiddenElements = this.hideAllFixedStickyElements();
+      const hiddenElements = this.hideAllFixedStickyElements(element);
       allHiddenElements.push(...hiddenElements);
       await this.waitForDOMUpdate();
 
@@ -584,7 +758,7 @@ class ElementCapturer {
 
         // [FIX] Re-check and hide fixed/sticky elements after scroll
         // Some elements may dynamically become fixed/sticky based on scroll position
-        const newHiddenElements = this.hideAllFixedStickyElements();
+        const newHiddenElements = this.hideAllFixedStickyElements(element);
         allHiddenElements.push(...newHiddenElements);
         await this.waitForDOMUpdate();
 
@@ -727,6 +901,10 @@ class ElementCapturer {
    */
   static async cropImage(imageData, rect, dpr = 1, contentHeight) {
     console.log('[ElementCapturer] Cropping image to rect:', rect, 'with contentHeight:', contentHeight);
+
+    if (![rect.width, contentHeight, dpr].every(value => Number.isFinite(value) && value > 0)) {
+      throw new Error('Cannot capture an element with empty or invalid dimensions');
+    }
 
     return new Promise((resolve, reject) => {
       const img = new Image();
