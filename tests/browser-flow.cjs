@@ -34,6 +34,10 @@ let context;
   await page.goto('http://127.0.0.1:' + server.address().port);
   await page.bringToFront();
   await page.waitForTimeout(1000);
+  page.on('console', msg => console.log('PAGE:', msg.text()));
+  const windowId = os('search', '--onlyvisible', '--name', 'Capture div E2E').toString().trim().split('\n').pop();
+  os('windowfocus', '--sync', windowId);
+  await page.evaluate(() => document.addEventListener('click', event => console.log('OS CLICK', event.clientX, event.clientY, event.target.tagName), true));
 
   async function startSelection() {
     await worker.evaluate(async url => {
@@ -48,6 +52,7 @@ let context;
     const offset = await page.evaluate(() => ({
       x: window.screenX, y: window.screenY + window.outerHeight - window.innerHeight,
     }));
+    console.log('OS geometry', JSON.stringify({box, offset}));
     os('mousemove', String(Math.round(offset.x + box.x + box.width / 2)),
       String(Math.round(offset.y + box.y + box.height / 2)));
   }
@@ -100,7 +105,8 @@ let context;
   fs.writeFileSync(path.join(output, 'failure.txt'), error.stack);
   if (context) {
     for (const [i, page] of context.pages().entries()) {
-      await page.screenshot({ path: path.join(output, 'failure-' + i + '.png') }).catch(() => {});
+      const shot = await page.screenshot({ path: path.join(output, 'failure-' + i + '.png') }).catch(() => null);
+      if (shot) console.log('SCREENSHOT_BASE64:' + shot.toString('base64'));
     }
   }
   console.error(error);
