@@ -1,13 +1,11 @@
 name: Capture flow browser tests
 on:
   pull_request:
-  push:
-    branches: [codex/capture-clipboard-toast]
 permissions:
   contents: read
 jobs:
   chromium:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
