@@ -35,6 +35,7 @@
         "src/content/highlighter.js",
         "src/content/dom-traversal.js",
         "src/content/capturer.js",
+        "src/content/capture-result.js",
         "src/content/element-selector.js"
       ],
       "css": ["src/styles/selector.css"],

@@ -7,7 +7,6 @@
     "message": "Capture any web element with precision and edit screenshots using professional tools",
     "description": "Extension description"
   },
-
   "popupTitle": {
     "message": "Element Screenshot",
     "description": "Popup title"
@@ -20,7 +19,6 @@
     "message": "Start Selection",
     "description": "Start selection button"
   },
-
   "howToUseTitle": {
     "message": "How to use:",
     "description": "How to use section title"
@@ -45,7 +43,6 @@
     "message": "Click \"Capture\" to take screenshot",
     "description": "How to use step 5"
   },
-
   "keyboardShortcutsTitle": {
     "message": "Keyboard shortcuts:",
     "description": "Keyboard shortcuts section title"
@@ -66,7 +63,6 @@
     "message": "Capture selected element",
     "description": "Enter key shortcut description"
   },
-
   "statusNoActiveTab": {
     "message": "No active tab found",
     "description": "Status message when no active tab is available"
@@ -92,7 +88,6 @@
       }
     }
   },
-
   "toolMove": {
     "message": "Move",
     "description": "Move tool"
@@ -137,7 +132,6 @@
     "message": "Mosaic",
     "description": "Mosaic tool"
   },
-
   "actionUndo": {
     "message": "Undo",
     "description": "Undo action"
@@ -162,7 +156,6 @@
     "message": "100%",
     "description": "Actual size action"
   },
-
   "colorPickerTitle": {
     "message": "Color",
     "description": "Color picker title"
@@ -171,7 +164,6 @@
     "message": "Stroke Width",
     "description": "Stroke width title"
   },
-
   "noImageLoaded": {
     "message": "No image loaded",
     "description": "No image loaded message"
@@ -192,7 +184,6 @@
     "message": "Download JPG",
     "description": "Download JPG button"
   },
-
   "tooltipMove": {
     "message": "Move (V)",
     "description": "Move tool tooltip"
@@ -261,7 +252,6 @@
     "message": "Actual Size (0)",
     "description": "Actual size tooltip"
   },
-
   "editorDocumentTitle": {
     "message": "Edit Screenshot - Element Screenshot Editor",
     "description": "Document title for the editor page"
@@ -480,5 +470,20 @@
   "editorOptionsMoveTip3": {
     "message": "Press ESC to deselect",
     "description": "Third tip for move tool"
+  },
+  "captureCopied": {
+    "message": "Copied to clipboard!"
+  },
+  "captureCopyFailed": {
+    "message": "Screenshot captured, but copying failed. Open the editor to copy or download it."
+  },
+  "captureEdit": {
+    "message": "Edit in editor"
+  },
+  "captureDismiss": {
+    "message": "Dismiss"
+  },
+  "captureEditorFailed": {
+    "message": "Could not open the editor. Please try again."
   }
 }
