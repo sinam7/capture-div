@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   applyI18nMessages();
 
+  document.getElementById('extensionVersion').textContent =
+    `v${chrome.runtime.getManifest().version}`;
+
   const startSelectionBtn = document.getElementById('startSelectionBtn');
 
   startSelectionBtn.addEventListener('click', async () => {
@@ -99,3 +102,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+

@@ -60,10 +60,11 @@ Simply click the link above or visit the Chrome Web Store and click "Add to Chro
 3. Hover over elements to see them highlighted
 4. Click on an element to select it
 5. Use the slider to adjust the selection (move left for parent elements, right for children)
-6. Click "Capture" to take a screenshot
+6. Click "Capture" or press Enter to capture and copy the image to your clipboard
+7. A bottom-right notification offers "Edit in editor" for 5 seconds. Hover or focus it to keep it visible; use Dismiss or Escape to close it.
 
 ### Editing Screenshots
-The editor will open automatically after capture with a full suite of tools:
+Click "Edit in editor" in the capture notification to open the existing editor. Capturing alone does not open a tab. If clipboard access is unavailable (for example on HTTP pages) or denied, the notification reports the failure and still offers editing, copying, and downloading in the editor.
 
 **Available Tools** (keyboard shortcuts in parentheses):
 - **Crop (C)** - Trim your screenshot to the perfect size
@@ -90,6 +91,16 @@ The editor will open automatically after capture with a full suite of tools:
 ## Development
 
 See [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md) for coding standards and workflow guidelines.
+
+Run the capture-flow regression tests with Node.js 18+:
+
+```bash
+node --test tests/capture-flow.test.cjs
+```
+
+These tests use mocked DOM, clipboard, and Chrome APIs. Before releasing, load the
+extension in Chrome and verify PNG pasting, long captures, notification interaction,
+and opening the editor on real pages.
 
 ### Project Structure
 ```
@@ -196,3 +207,4 @@ MIT License - see the LICENSE file for details.
 ---
 
 Made with ❤️ by the Capture div team
+

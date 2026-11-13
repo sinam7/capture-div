@@ -7,7 +7,6 @@
     "message": "웹 요소를 정밀하게 캡처하고 전문적인 도구로 스크린샷 편집",
     "description": "확장 프로그램 설명"
   },
-
   "popupTitle": {
     "message": "요소 스크린샷",
     "description": "팝업 제목"
@@ -20,7 +19,6 @@
     "message": "선택 시작",
     "description": "선택 시작 버튼"
   },
-
   "howToUseTitle": {
     "message": "사용 방법:",
     "description": "사용 방법 섹션 제목"
@@ -45,7 +43,6 @@
     "message": "\"캡처\" 클릭하여 스크린샷 촬영",
     "description": "사용 방법 5단계"
   },
-
   "keyboardShortcutsTitle": {
     "message": "키보드 단축키:",
     "description": "키보드 단축키 섹션 제목"
@@ -66,7 +63,6 @@
     "message": "선택한 요소 캡처",
     "description": "Enter 키 단축키 설명"
   },
-
   "statusNoActiveTab": {
     "message": "활성 탭을 찾을 수 없습니다",
     "description": "활성 탭이 없을 때 상태 메시지"
@@ -92,7 +88,6 @@
       }
     }
   },
-
   "toolMove": {
     "message": "이동",
     "description": "이동 도구"
@@ -137,7 +132,6 @@
     "message": "모자이크",
     "description": "모자이크 도구"
   },
-
   "actionUndo": {
     "message": "실행 취소",
     "description": "실행 취소 동작"
@@ -162,7 +156,6 @@
     "message": "100%",
     "description": "실제 크기 동작"
   },
-
   "colorPickerTitle": {
     "message": "색상",
     "description": "색상 선택기 제목"
@@ -171,7 +164,6 @@
     "message": "선 굵기",
     "description": "선 굵기 제목"
   },
-
   "noImageLoaded": {
     "message": "이미지가 로드되지 않음",
     "description": "이미지 미로드 메시지"
@@ -192,7 +184,6 @@
     "message": "JPG 다운로드",
     "description": "JPG 다운로드 버튼"
   },
-
   "tooltipMove": {
     "message": "이동 (V)",
     "description": "이동 도구 툴팁"
@@ -261,7 +252,6 @@
     "message": "실제 크기 (0)",
     "description": "실제 크기 툴팁"
   },
-
   "editorDocumentTitle": {
     "message": "스크린샷 편집 - 요소 스크린샷 에디터",
     "description": "에디터 페이지 제목"
@@ -480,5 +470,20 @@
   "editorOptionsMoveTip3": {
     "message": "ESC 키를 눌러 선택을 해제하세요",
     "description": "이동 도구 팁 3"
+  },
+  "captureCopied": {
+    "message": "클립보드에 복사했어요!"
+  },
+  "captureCopyFailed": {
+    "message": "캡처했지만 복사하지 못했어요. 에디터에서 복사하거나 다운로드해 주세요."
+  },
+  "captureEdit": {
+    "message": "에디터로 편집하기"
+  },
+  "captureDismiss": {
+    "message": "닫기"
+  },
+  "captureEditorFailed": {
+    "message": "에디터를 열지 못했어요. 다시 시도해 주세요."
   }
 }

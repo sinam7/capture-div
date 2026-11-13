@@ -7,6 +7,8 @@ class ElementSelector {
   constructor() {
     console.log('[ElementSelector] Constructor called');
     this.isActive = false;
+    this.isCapturing = false;
+    this.captureResult = new CaptureResult();
     this.highlighter = new ElementHighlighter();
     this.selectedElement = null;
     this.originalElement = null; // Store the originally clicked element
@@ -31,7 +33,8 @@ class ElementSelector {
    */
   activate() {
     console.log('[ElementSelector] activate() called, isActive:', this.isActive);
-    if (this.isActive) return;
+    if (this.isActive || this.isCapturing) return;
+    this.captureResult.dismiss();
 
     this.isActive = true;
     this.attachEventListeners();
@@ -548,11 +551,12 @@ class ElementSelector {
       hasSliderContainer: !!this.sliderContainer,
     });
 
-    if (!this.selectedElement) {
+    if (this.isCapturing || !this.selectedElement) {
       console.error('[ElementSelector] No element selected, aborting capture');
       return;
     }
 
+    this.isCapturing = true;
     const captureBtn = this.sliderContainer?.querySelector('.element-selector__btn--capture');
     console.log('[ElementSelector] captureBtn found:', !!captureBtn);
 
@@ -576,18 +580,8 @@ class ElementSelector {
 
       console.log('[ElementSelector] Capture successful, image data length:', imageData.length);
 
-      // Store the image and open editor
-      await Messaging.sendToBackground({
-        action: 'openEditor',
-        imageData,
-      });
-
-      console.log('[ElementSelector] Editor open request sent');
-
-      this.showNotification('Screenshot captured! Opening editor...');
-
-      // Clean up
       this.deactivate();
+      await this.captureResult.show(imageData);
     } catch (error) {
       console.error('[ElementSelector] Failed to capture element:', error);
       this.showNotification('Failed to capture screenshot. Please try again.');
@@ -600,7 +594,9 @@ class ElementSelector {
       if (this.sliderContainer) {
         this.sliderContainer.style.display = 'block';
       }
-      this.highlighter.highlight(this.selectedElement);
+      if (this.selectedElement) this.highlighter.highlight(this.selectedElement);
+    } finally {
+      this.isCapturing = false;
     }
   }
 
@@ -642,6 +638,7 @@ class ElementSelector {
   destroy() {
     console.log('[ElementSelector] destroy() called');
     this.deactivate();
+    this.captureResult.dismiss();
     this.highlighter.destroy();
   }
 }
@@ -671,3 +668,4 @@ Messaging.onMessage((message, sender, sendResponse) => {
     sendResponse({ success: true });
   }
 });
+
